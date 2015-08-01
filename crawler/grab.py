@@ -2,6 +2,8 @@
 import socket
 from httplib2 import Http
 
+import os
+
 import time
 import random
 
@@ -47,6 +49,7 @@ if __name__ == '__main__':
         for i in f.readlines():
             url = i.split()[-1]
             filename = 'cache/{}.html'.format('_'.join(url.split('/')[-4:]))
-            print 'request: {}'.format(url)
-            request(url, filename=filename)
-            print '{} saved'.format(filename)
+            if not os.path.exists(filename):
+                print 'request: {}'.format(url)
+                request(url, filename=filename)
+                print '{} saved'.format(filename)
