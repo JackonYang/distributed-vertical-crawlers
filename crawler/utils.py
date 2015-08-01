@@ -3,38 +3,53 @@ import re
 import socket
 from httplib2 import Http
 
-
-_headers_templates = {
-    'Connection': 'keep-alive',
-    'User-Agent': ('Mozilla/5.0 (Windows NT 6.1) AppleWebKit/534.24 '
-                   '(KHTML, like Gecko) Chrome/11.0.696.65 Safari/534.24'),
-    'Content-type': 'application/x-www-form-urlencoded',
-    'Accept': '*/*',
-    'Accept-Charset': 'UTF-8,*;q=0.5',
-    'Accept-Encoding': 'gzip,deflate,sdch',
-    'Accept-Language': 'zh-CN,zh;q=0.8',
-    'Cache-Control': 'no-cache',
-    'Connection': 'keep-alive',
-}
+import time
+import random
 
 
-def get_header():
-    return _headers_templates.copy()
+_last_req = None
 
 
-def request(url, timeout=2, method='GET'):
+def delay():
+    global _last_req
+
+    if _last_req is None:
+        _last_req = time.time()
+        return
+
+    t_delay = random.uniform(2, 10)  # wait 2-10s, avg: 6s
+    next_req = _last_req + t_delay
+    now = time.time()
+    print '----delay: {}'.format(t_delay)
+    if next_req > now:
+        time.sleep(next_req-now)
+    _last_req = next_req
+
+
+def wait(f):
+    def _wrap_func(*args, **kwargs):
+        delay()
+        return f(*args, **kwargs)
+    return _wrap_func
+
+
+@wait
+def request(url, timeout=2, method='GET', filename=None):
     """return None if timeout"""
     h = Http(timeout=timeout)
     try:
-        rsp, content = h.request(url, method, headers=get_header())
+        rsp, content = h.request(url, method)
     except socket.timeout:
         return None
 
-    if rsp['status'] != '404':  # TODO; status code check
-        return content
+    if filename:
+        with open(filename, 'w') as f:
+            f.write(content)
+
+    return content
 
 
-def request_pages(target, page_range=100, filename=None):
+def request_pages(target, page_range=100, filename_ptn=None):
     """request a list of pages
 
     page_range is a set / list of pages to request.
@@ -45,7 +60,10 @@ def request_pages(target, page_range=100, filename=None):
 
     # request next page until no more items detected
     for page in page_range:
-        content = request(target.url(page))
+        filename=None
+        if filename_ptn:
+            filename=filename_ptn.format(page)
+        content = request(target.url(page), filename=filename)
         if not target.parse(content, page):
             break
 
