@@ -1,14 +1,20 @@
 # -*- Encoding: utf-8 -*-
 import socket
 from httplib2 import Http
+import re
 
 import os
 
 import time
 import random
 
+import db
+from utils import request_pages, Pagination
+
 
 _last_req = None
+
+
 def delay():
     global _last_req
 
@@ -68,8 +74,36 @@ def grab_shops(shop_ids, dir='cache/shops'):
             request(url, filename=filename)
             print '{} saved'.format(filename)
 
+
+def grab_shop_review(shop_ids, dir='cache/shop_review'):
+    review_item_ptn = re.compile(r'<a target="_blank" title="" href="/member/(\d+)">(.+?)</a>')
+    for sid in shop_ids:
+        if not db.shop_review_exists(sid):
+            review_url_ptn = ''.join([
+                'http://www.dianping.com/shop/',
+                sid,
+                '/review_more?pageno={}',
+                ])
+
+            target = Pagination(review_url_ptn, review_item_ptn)
+            filename = ''.join([
+                dir,
+                '/review_',
+                sid,
+                '_{}.html',
+                ])
+            print 'request reviews of shop {}'.format(sid)
+            request_pages(target, 9, filename=filename)
+            print 'got {} reviews'.format(len(target.data))
+            db.add_one(db.his_shop_review,
+                       shop_id=sid, num=len(target.data), run_info='success')
+        else:
+            print '{} exists'.format(sid)
+
+
 if __name__ == '__main__':
     sids = []
     with open('data/shops.txt', 'r') as f:
         sids = [sid.strip() for sid in f.readlines()]
-    grab_shops(sids)
+    # grab_shops(sids)
+    grab_shop_review(sids)
