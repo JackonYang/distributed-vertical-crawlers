@@ -1,5 +1,6 @@
 # .gitignore by JackonYang
 
+database.sqlite3
 crawler/cache/*
 
 
