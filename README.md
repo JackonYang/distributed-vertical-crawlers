@@ -15,7 +15,7 @@ Data Bang
 
 - [609605178ba13c4a81f55d6c822dc1902340ebc8](https://github.com/JackonYang/dataBang/commit/609605178ba13c4a81f55d6c822dc1902340ebc8)
 
-    拿到 203 条二级分类的 name 与 url
+    拿到 203 条二级分类的 name 与 url. 其中, 不重复的, 175 条
 
     url 格式: `/search/category/\d{2}/\d{2}/g\d+`.
 
