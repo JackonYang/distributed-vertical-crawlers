@@ -8,8 +8,6 @@ from sqlalchemy.orm import sessionmaker
 
 
 Base = declarative_base()
-engine = create_engine('sqlite:///database.sqlite3')
-Base.metadata.create_all(engine)
 
 
 class download_job(Base):
@@ -58,8 +56,12 @@ def shop_review_exists(sid):
 
 
 
+engine = create_engine('sqlite:///database.sqlite3')
+Base.metadata.create_all(engine)
+
+
 if __name__ == '__main__':
-    add_one(his_shop_review, shop_id='1111', num=300, run_info='success')
+    # add_one(his_shop_review, shop_id='1111', num=300, run_info='success')
 
     dataset = [
         his_shop_review(shop_id='222', num=203, run_info='success'),
@@ -67,7 +69,7 @@ if __name__ == '__main__':
         his_shop_review(shop_id='444', num=3, run_info='success'),
         ]
 
-    add_many(dataset)
+    # add_many(dataset)
 
     print shop_review_exists('222')
     print shop_review_exists('224')
