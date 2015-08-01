@@ -34,7 +34,7 @@ class his_shop_review(Base):
     timestamp = Column(TIMESTAMP, server_default=text('CURRENT_TIMESTAMP'))
 
     def __repr__(self):
-        return self.url
+        return 'shop={}, num={}'.format(self.shop_id, self.num)
 
 
 def add_one(table, *args, **kwargs):
@@ -51,6 +51,13 @@ def add_many(obj_list):
     session.commit()
 
 
+def shop_review_exists(sid):
+    Session = sessionmaker(bind=engine)
+    session = Session()
+    return session.query(his_shop_review).filter_by(shop_id=sid).count() > 0
+
+
+
 if __name__ == '__main__':
     add_one(his_shop_review, shop_id='1111', num=300, run_info='success')
 
@@ -61,3 +68,6 @@ if __name__ == '__main__':
         ]
 
     add_many(dataset)
+
+    print shop_review_exists('222')
+    print shop_review_exists('224')
