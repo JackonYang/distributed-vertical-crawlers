@@ -52,7 +52,7 @@ if __name__ == '__main__':
     with open('data/cate_url_xian.txt', 'r') as f:
         for i in f.readlines():
             url = i.split()[-1]
-            filename = 'cache/{}.html'.format('_'.join(url.split('/')[-4:]))
+            filename = 'cache/category/{}.html'.format('_'.join(url.split('/')[-4:]))
             if not os.path.exists(filename):
                 print 'request: {}'.format(url)
                 request(url, filename=filename)
