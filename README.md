@@ -20,3 +20,11 @@ Data Bang
     url 格式: `/search/category/\d{2}/\d{2}/g\d+`.
 
     去掉最后的最后的 gxxxx, 是一类分类. 一类分类数量不多.
+
+- [579b8014f474881b9b89db65b4c2cae4dc13fa27](https://github.com/JackonYang/dataBang/commit/579b8014f474881b9b89db65b4c2cae4dc13fa27)
+
+    拿到 2216 条不重复 shops
+
+    婚庆类店铺, href 的 url 里面包含 ?KID=xxxxx, 使用正则匹配时需注意
+
+    一个城市的某一个二级分类下, 可能一个店铺也没有.
