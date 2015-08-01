@@ -48,7 +48,7 @@ def request(url, timeout=2, method='GET', filename=None):
     return content
 
 
-if __name__ == '__main__':
+def grab_cate():
     with open('data/cate_url_xian.txt', 'r') as f:
         for i in f.readlines():
             url = i.split()[-1]
@@ -57,3 +57,19 @@ if __name__ == '__main__':
                 print 'request: {}'.format(url)
                 request(url, filename=filename)
                 print '{} saved'.format(filename)
+
+
+def grab_shops(shop_ids, dir='cache/shops'):
+    for sid in shop_ids:
+        url = 'http://www.dianping.com/shop/{}'.format(sid)
+        filename = '{}/{}.html'.format(dir, sid)
+        if not os.path.exists(filename):
+            print 'request: {}'.format(url)
+            request(url, filename=filename)
+            print '{} saved'.format(filename)
+
+if __name__ == '__main__':
+    sids = []
+    with open('data/shops.txt', 'r') as f:
+        sids = [sid.strip() for sid in f.readlines()]
+    grab_shops(sids)
