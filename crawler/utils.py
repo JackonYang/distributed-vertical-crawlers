@@ -34,14 +34,14 @@ def request(url, timeout=2, method='GET'):
         return content
 
 
-def request_pages(target, page_range=100):
+def request_pages(target, page_range=100, filename=None):
     """request a list of pages
 
     page_range is a set / list of pages to request.
-       if int, [0, page_range] will be generated.
+       if int, [1, page_range] will be generated.
     """
     if isinstance(page_range, int):
-        page_range = range(page_range+1)
+        page_range = range(1, page_range+1)
 
     # request next page until no more items detected
     for page in page_range:
@@ -91,7 +91,7 @@ if __name__ == '__main__':
 
     review_item_ptn = re.compile(r'<a target="_blank" title="" href="/member/(\d+)">(.+?)</a>')
 
-    shop_id = '18664537'
+    shop_id = '16005090'
     review_url_ptn = ''.join([
         'http://www.dianping.com/shop/',
         shop_id,
