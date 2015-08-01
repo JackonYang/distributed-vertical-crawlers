@@ -25,5 +25,4 @@ if __name__ == '__main__':
                 data_shops = data_shops.union(shops)
             else:
                 print '0 shops got in {}'.format(fname)
-    with open('data/shops.txt', 'w') as f:
-        f.write('\n'.join(data_shops))
+    print '\n'.join(data_shops)
