@@ -17,7 +17,11 @@ def delay():
         return
 
     next_req = _last_req + random.uniform(2, 10)  # wait 2-10s, avg: 6s
-    time.sleep(next_req - time.time())
+    now = time.time()
+    if next_req > now:
+        time.sleep(next_req-now)
+    else:
+        print 'next_req<now, {}'.format(next_req-_last_req)
     _last_req = next_req
 
 
