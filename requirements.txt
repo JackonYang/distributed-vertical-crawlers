@@ -1,2 +1,4 @@
 # http
 httplib2==0.9
+
+SQLAlchemy==0.9.10
