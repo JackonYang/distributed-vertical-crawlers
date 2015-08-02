@@ -8,12 +8,27 @@ def parse_shop(content):
     return set(shop_prog.findall(content))
 
 
-def get_files(files_dir, files_prefix):
-    return [os.path.join(files_dir, f) for f in os.listdir(files_dir) if f.startswith(files_prefix)]
+def get_files(files_dir, files_prefix=''):
+    return [[f[:-5], os.path.join(files_dir, f)] for f in os.listdir(files_dir) if f.endswith('.html') and f.startswith(files_prefix)]
+
+
+def parse_shop_name(content):
+    progs = [
+        r'<h1 class="shop-name">\s*(.*?)\s*<.*?/h1>',
+        r'<h1 class="shop-title" itemprop="name itemreviewed">(.*?)</h1>',  # sid 17936881
+        r'<h2 class="market-name">(.*?)</h2>',  # sid 1804816
+        r'<h1>(.*?)</h1>',  # sid 19662907
+        ]
+    for p in progs:
+        m = re.compile(p, re.DOTALL).findall(content)
+        if m:
+            return m[0]
+    return ''
 
 
 if __name__ == '__main__':
 
+    """
     data_shops = set()
     # category parser
     for fname in get_files('cache/category', 'category_'):
@@ -26,3 +41,10 @@ if __name__ == '__main__':
             else:
                 print '0 shops got in {}'.format(fname)
     print '\n'.join(data_shops)
+    """
+
+    for sid, fname in get_files('cache/shops'):
+        with open(fname, 'r') as f:
+            content = ''.join(f.readlines())
+
+            name = parse_shop_name(content)
