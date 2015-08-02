@@ -77,6 +77,7 @@ class Pagination:
         self.url_ptn = url_ptn
         self.item_ptn = item_ptn
         self.max_failed = max_failed
+        self.num_resend = 3
 
         self.data = []
         self.failed_seq = set()
@@ -100,9 +101,12 @@ class Pagination:
         return len(self.failed_seq) <= self.max_failed
 
     def get_resend(self):
-        if self.failed_seq and self.go_on():
-            return self.failed_seq
-        return None
+        ret = None
+        if self.failed_seq and self.go_on() and self.num_resend:
+            ret = self.failed_seq.copy()
+            self.failed_seq.clear()
+            self.num_resend -= 1
+        return ret
 
 
 if __name__ == '__main__':
