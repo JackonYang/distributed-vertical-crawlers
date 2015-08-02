@@ -44,8 +44,7 @@ def grab_shop_review(shop_ids, dir='cache/shop_review'):
             print 'request reviews of shop {}'.format(sid)
             request_pages(target, 9, filename_ptn=filename)
             print '--got {} reviews'.format(len(target.data))
-            add_one(job_shop_review,
-                       shop_id=sid, num=len(target.data))
+            add_one(job_shop_review, sid=sid, num=len(target.data))
         else:
             print '{} exists'.format(sid)
 
