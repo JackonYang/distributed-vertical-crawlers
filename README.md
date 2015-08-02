@@ -36,3 +36,9 @@ Data Bang
     当前提取评论人的正则, 在个别页面中失效. 推测跟 shop 的类别有关.
     鉴于抓取 shop url 也存在个别类别的页面 url 模式不一致.
     存储 shop 时, 应该包含类别信息.
+
+- [032e85412b0c42d45b18dd7a55719d73f821f83b](https://github.com/JackonYang/dataBang/commit/032e85412b0c42d45b18dd7a55719d73f821f83b)
+
+    从店铺主页中, 解析出 12,142 条新店铺 id.
+
+    从已下载的 2215 个店铺主页中, 解析出 name, star, 已保存至数据库 profile 表中
