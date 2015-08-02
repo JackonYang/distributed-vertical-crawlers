@@ -28,3 +28,11 @@ Data Bang
     婚庆类店铺, href 的 url 里面包含 ?KID=xxxxx, 使用正则匹配时需注意
 
     一个城市的某一个二级分类下, 可能一个店铺也没有.
+
+- [35a9881ac3d2037a9ec9a24043a75ea9080ffdf8](https://github.com/JackonYang/dataBang/commit/35a9881ac3d2037a9ec9a24043a75ea9080ffdf8)
+
+   可连续爬取店铺的所有评论, 当前参数为, 每个店铺最大爬取 9 页 180 条评论. 
+
+    当前提取评论人的正则, 在个别页面中失效. 推测跟 shop 的类别有关.
+    鉴于抓取 shop url 也存在个别类别的页面 url 模式不一致.
+    存储 shop 时, 应该包含类别信息.
