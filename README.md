@@ -15,15 +15,17 @@ Data Bang
 
 - [609605178ba13c4a81f55d6c822dc1902340ebc8](https://github.com/JackonYang/dataBang/commit/609605178ba13c4a81f55d6c822dc1902340ebc8)
 
-    拿到 203 条二级分类的 name 与 url. 其中, 不重复的, 175 条
+    拿到 203 条分类的 name 与 url. 其中, 不重复的, 175 条
 
     url 格式: `/search/category/\d{2}/\d{2}/g\d+`.
 
-    去掉最后的最后的 gxxxx, 是一类分类. 一类分类数量不多.
+    去掉最后的最后的 gxxxx, 是一级分类. 一级分类数量不多.
+
+    另, 基于地址的分类, url 格式: `/search/category/\d{2}/\d{2}/r\d+`. 最后的 g 变为 r
 
 - [579b8014f474881b9b89db65b4c2cae4dc13fa27](https://github.com/JackonYang/dataBang/commit/579b8014f474881b9b89db65b4c2cae4dc13fa27)
 
-    拿到 2216 条不重复 shops
+    抓取各个分类的店铺列表页面, 拿到 2216 条不重复 shops
 
     婚庆类店铺, href 的 url 里面包含 ?KID=xxxxx, 使用正则匹配时需注意
 
@@ -42,3 +44,9 @@ Data Bang
     从店铺主页中, 解析出 12,142 条新店铺 id.
 
     从已下载的 2215 个店铺主页中, 解析出 name, star, 已保存至数据库 profile 表中
+
+- [ec8a6f5cfad13ece87e9713aa8d2ba10f6a7f553](https://github.com/JackonYang/dataBang/commit/ec8a6f5cfad13ece87e9713aa8d2ba10f6a7f553)
+
+    可以持续解析 shop_profile 页面, 得到 name, star 信息并保存.
+
+    存在个别页面, 关联的 shop 是死链接. 比如 http://www.dianping.com/shop/2461414 的分店 http://www.dianping.com/shop/15923760
