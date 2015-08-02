@@ -5,7 +5,7 @@ import os
 from db import shop_profile, add_many
 
 
-def parse_shop(content):
+def find_new_shop(content):
     shop_prog = re.compile(r'href="/shop/(\d+)(?:\?[^"]+)?"', re.DOTALL)
     return set(shop_prog.findall(content))
 
@@ -51,7 +51,7 @@ if __name__ == '__main__':
         with open(fname, 'r') as f:
             content = ''.join(f.readlines())
 
-            shops = parse_shop(content)
+            shops = find_new_shop(content)
             if shops:
                 data_shops = data_shops.union(shops)
             else:
@@ -59,6 +59,7 @@ if __name__ == '__main__':
     print '\n'.join(data_shops)
     """
 
+    """  # add shop profiles
     profile_data = []
     for sid, fname in get_files('cache/shops'):
         with open(fname, 'r') as f:
@@ -68,3 +69,17 @@ if __name__ == '__main__':
             star = parse_shop_star(content)
             profile_data.append(shop_profile(sid=sid, shop_name=unicode(name), star=star))
     add_many(profile_data)
+    """
+
+
+    sids = set()
+    for sid, fname in get_files('cache/shops'):
+        with open(fname, 'r') as f:
+            content = ''.join(f.readlines())
+
+            sids.update(find_new_shop(content))
+
+    with open('data/shops.txt', 'r') as f:
+        olds = {sid.strip() for sid in f.readlines()}
+        news = sids - olds
+        print '\n'.join(news)
