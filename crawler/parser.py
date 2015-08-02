@@ -63,8 +63,6 @@ if __name__ == '__main__':
             star = parse_shop_star(content)
             data_shop_profile.append(shop_profile(sid=sid, shop_name=name, star=star))
 
-
-
     print 'number of shop ID: {}'.format(len(sids))
     sids = sids - searched
     print 'number of new shop ID: {}'.format(len(sids))
