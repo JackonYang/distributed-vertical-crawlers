@@ -2,16 +2,19 @@
 import re
 import os
 
-from db import shop_profile, add_many
+from db import shop_profile, add_many, get_sids_db
 
 
-def find_new_shop(content):
+def find_shop_ids(content):
     shop_prog = re.compile(r'href="/shop/(\d+)(?:\?[^"]+)?"', re.DOTALL)
     return set(shop_prog.findall(content))
 
 
 def get_files(files_dir, files_prefix=''):
-    return [[f[:-5], os.path.join(files_dir, f)] for f in os.listdir(files_dir) if f.endswith('.html') and f.startswith(files_prefix)]
+    for filename in os.listdir(files_dir):
+        if filename.endswith('.html') and filename.startswith(files_prefix):
+            with open(os.path.join(files_dir, filename)) as f:
+                yield (filename[:-5], ''.join(f.readlines()))
 
 
 def parse_shop_star(content):
@@ -25,7 +28,7 @@ def parse_shop_star(content):
         m = re.compile(p, re.DOTALL).findall(content)
         if m:
             return int(m[0])
-    return ''
+    return 0
 
 
 def parse_shop_name(content):
@@ -39,47 +42,31 @@ def parse_shop_name(content):
         m = re.compile(p, re.DOTALL).findall(content)
         if m:
             return m[0].decode('utf8')
-    return ''
+    return 'null'
 
 
 if __name__ == '__main__':
-
-    """
-    data_shops = set()
-    # category parser
-    for fname in get_files('cache/category', 'category_'):
-        with open(fname, 'r') as f:
-            content = ''.join(f.readlines())
-
-            shops = find_new_shop(content)
-            if shops:
-                data_shops = data_shops.union(shops)
-            else:
-                print '0 shops got in {}'.format(fname)
-    print '\n'.join(data_shops)
-    """
-
-    """  # add shop profiles
-    profile_data = []
-    for sid, fname in get_files('cache/shops'):
-        with open(fname, 'r') as f:
-            content = ''.join(f.readlines())
-
-            name = parse_shop_name(content)
-            star = parse_shop_star(content)
-            profile_data.append(shop_profile(sid=sid, shop_name=unicode(name), star=star))
-    add_many(profile_data)
-    """
-
+    dir_shop_profile = 'cache/shops'
 
     sids = set()
-    for sid, fname in get_files('cache/shops'):
-        with open(fname, 'r') as f:
-            content = ''.join(f.readlines())
+    data_shop_profile = []
 
-            sids.update(find_new_shop(content))
+    searched = get_sids_db()
 
-    with open('data/shops.txt', 'r') as f:
-        olds = {sid.strip() for sid in f.readlines()}
-        news = sids - olds
-        print '\n'.join(news)
+    for sid, content in get_files(dir_shop_profile):
+
+        # sids.update(find_shop_ids(content))
+
+        # shop profile
+        if sid not in searched:
+            name = parse_shop_name(content)
+            star = parse_shop_star(content)
+            data_shop_profile.append(shop_profile(sid=sid, shop_name=name, star=star))
+
+
+
+    print 'number of shop ID: {}'.format(len(sids))
+    sids = sids - searched
+    print 'number of new shop ID: {}'.format(len(sids))
+    add_many(data_shop_profile)
+    print '{} new shop profile saved'.format(len(data_shop_profile))

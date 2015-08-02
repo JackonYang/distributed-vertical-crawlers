@@ -26,7 +26,7 @@ class job_shop_review(Base):
 class shop_profile(Base):
     __tablename__ = 'shop_profile'
 
-    sid = Column(Integer, primary_key=True)
+    sid = Column(String(20), primary_key=True)
     shop_name = Column(String(100))
     star = Column(Integer)
     timestamp = Column(TIMESTAMP, server_default=text('CURRENT_TIMESTAMP'))
@@ -60,9 +60,16 @@ def exists(table, *args, **kwargs):
     return session.query(table).filter_by(*args, **kwargs).count() > 0
 
 
+def get_sids_db():
+    Session = sessionmaker(bind=engine)
+    session = Session()
+    return {d.sid for d in session.query(shop_profile).all()}
+
+
 if __name__ == '__main__':
-    add_one(job_shop_review, sid='1111', num=300)
-    add_one(job_shop_review, sid='222', num=509)
+    # add_one(job_shop_review, sid='1111', num=300)
+    # add_one(job_shop_review, sid='222', num=509)
 
     print exists(job_shop_review, sid='222')
     print exists(job_shop_review, sid='224')
+    print len(get_sids_db())
