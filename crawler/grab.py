@@ -2,8 +2,9 @@
 import re
 import os
 
-from db import job_shop_review
-from db import add_one, exists
+from db import job_shop_review, shop_profile
+from db import add_one, get_sids_db
+import parser
 
 from utils import request, request_pages, Pagination
 
@@ -17,12 +18,20 @@ def grab_cate():
                 request(url, filename=filename)
 
 
-def grab_shops(shop_ids, dir='cache/shops'):
-    for sid in shop_ids:
+def grab_shop_profile(sids, dir='cache/shops'):
+    for sid in sids:
         url = 'http://www.dianping.com/shop/{}'.format(sid)
         filename = '{}/{}.html'.format(dir, sid)
         if not os.path.exists(filename):
-            request(url, filename=filename)
+            print 'grab_shop. {}'.format(sid)
+            content = request(url, filename=filename)
+
+            name = parser.parse_shop_name(content)
+            star = parser.parse_shop_star(content)
+
+            add_one(shop_profile, sid=sid, shop_name=name, star=star)
+
+            print u'-- {} - {}'.format(name, star/10.0)
 
 
 def grab_shop_review(shop_ids, dir='cache/shop_review'):
@@ -54,5 +63,5 @@ if __name__ == '__main__':
     with open('data/shops.txt', 'r') as f:
         sids = [sid.strip() for sid in f.readlines()]
 
-    grab_shops(sids)
+    grab_shop_profile(sids)
     grab_shop_review(sids)
