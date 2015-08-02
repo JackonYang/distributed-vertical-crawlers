@@ -10,18 +10,6 @@ from sqlalchemy.orm import sessionmaker
 Base = declarative_base()
 
 
-class download_job(Base):
-    __tablename__ = 'download_job'
-
-    id = Column(Integer, Sequence('job_id_seq'), primary_key=True)
-    url = Column(String(500))
-    filename = Column(String(100))
-    status = Column(String(10))
-
-    def __repr__(self):
-        return self.url
-
-
 class his_shop_review(Base):
     __tablename__ = 'his_shop_review'
 
