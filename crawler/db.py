@@ -10,17 +10,21 @@ from sqlalchemy.orm import sessionmaker
 Base = declarative_base()
 
 
-class his_shop_review(Base):
-    __tablename__ = 'his_shop_review'
+class job_shop_review(Base):
+    __tablename__ = 'job_shop_review'
 
-    shop_id = Column(Integer, primary_key=True)
+    id = Column(Integer, Sequence('job_shop_review_seq'), primary_key=True)
+    sid = Column(Integer)
     num = Column(Integer)
-    run_info = Column(String(10))
-    notes = Column(String(500))
     timestamp = Column(TIMESTAMP, server_default=text('CURRENT_TIMESTAMP'))
+    notes = Column(String(500), default='')
 
     def __repr__(self):
-        return 'shop={}, num={}'.format(self.shop_id, self.num)
+        return '<job_shop_review(shop={}, num={})>'.format(self.sid, self.num)
+
+
+engine = create_engine('sqlite:///database.sqlite3')
+Base.metadata.create_all(engine)
 
 
 def add_one(table, *args, **kwargs):
@@ -30,34 +34,15 @@ def add_one(table, *args, **kwargs):
     session.commit()
 
 
-def add_many(obj_list):
+def exists(table, *args, **kwargs):
     Session = sessionmaker(bind=engine)
     session = Session()
-    session.add_all(obj_list)
-    session.commit()
-
-
-def shop_review_exists(sid):
-    Session = sessionmaker(bind=engine)
-    session = Session()
-    return session.query(his_shop_review).filter_by(shop_id=sid).count() > 0
-
-
-
-engine = create_engine('sqlite:///database.sqlite3')
-Base.metadata.create_all(engine)
+    return session.query(table).filter_by(*args, **kwargs).count() > 0
 
 
 if __name__ == '__main__':
-    # add_one(his_shop_review, shop_id='1111', num=300, run_info='success')
+    add_one(job_shop_review, sid='1111', num=300)
+    add_one(job_shop_review, sid='222', num=509)
 
-    dataset = [
-        his_shop_review(shop_id='222', num=203, run_info='success'),
-        his_shop_review(shop_id='333', num=349, run_info='success'),
-        his_shop_review(shop_id='444', num=3, run_info='success'),
-        ]
-
-    # add_many(dataset)
-
-    print shop_review_exists('222')
-    print shop_review_exists('224')
+    print exists(job_shop_review, sid='222')
+    print exists(job_shop_review, sid='224')
