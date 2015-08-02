@@ -2,6 +2,8 @@
 import re
 import os
 
+from db import shop_profile, add_many
+
 
 def parse_shop(content):
     shop_prog = re.compile(r'href="/shop/(\d+)(?:\?[^"]+)?"', re.DOTALL)
@@ -22,7 +24,7 @@ def parse_shop_star(content):
     for p in progs:
         m = re.compile(p, re.DOTALL).findall(content)
         if m:
-            return m[0]
+            return int(m[0])
     return ''
 
 
@@ -36,7 +38,7 @@ def parse_shop_name(content):
     for p in progs:
         m = re.compile(p, re.DOTALL).findall(content)
         if m:
-            return m[0]
+            return m[0].decode('utf8')
     return ''
 
 
@@ -57,10 +59,12 @@ if __name__ == '__main__':
     print '\n'.join(data_shops)
     """
 
+    profile_data = []
     for sid, fname in get_files('cache/shops'):
         with open(fname, 'r') as f:
             content = ''.join(f.readlines())
 
             name = parse_shop_name(content)
             star = parse_shop_star(content)
-            print sid, name, star
+            profile_data.append(shop_profile(sid=sid, shop_name=unicode(name), star=star))
+    add_many(profile_data)
