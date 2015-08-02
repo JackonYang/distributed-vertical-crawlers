@@ -23,6 +23,19 @@ class job_shop_review(Base):
         return '<job_shop_review(shop={}, num={})>'.format(self.sid, self.num)
 
 
+class shop_profile(Base):
+    __tablename__ = 'shop_profile'
+
+    sid = Column(Integer, primary_key=True)
+    shop_name = Column(String(100))
+    star = Column(Integer)
+    timestamp = Column(TIMESTAMP, server_default=text('CURRENT_TIMESTAMP'))
+
+
+    def __repr__(self):
+        return '<shop_profile({}-{})>'.format(self.sid, self.shop_name)
+
+
 engine = create_engine('sqlite:///database.sqlite3')
 Base.metadata.create_all(engine)
 
@@ -31,6 +44,13 @@ def add_one(table, *args, **kwargs):
     Session = sessionmaker(bind=engine)
     session = Session()
     session.add(table(*args, **kwargs))
+    session.commit()
+
+
+def add_many(obj_list):
+    Session = sessionmaker(bind=engine)
+    session = Session()
+    session.add_all(obj_list)
     session.commit()
 
 
