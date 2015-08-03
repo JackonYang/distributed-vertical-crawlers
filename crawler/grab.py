@@ -3,10 +3,10 @@ import re
 import os
 
 from db import job_shop_review, shop_profile
-from db import add_one, get_sids_db
+from db import add_one, exists
 import parser
 
-from utils import request, request_pages, Pagination
+from req import request, request_pages, Pagination
 
 
 def grab_cate():
@@ -24,32 +24,29 @@ def grab_shop_profile(sids, dir='cache/shops'):
         filename = '{}/{}.html'.format(dir, sid)
         if not os.path.exists(filename):
             print 'grab_shop. {}'.format(sid)
-            content = request(url, filename=filename)
+            try:
+                content = request(url, filename=filename)
 
-            name = parser.parse_shop_name(content)
-            star = parser.parse_shop_star(content)
+                name = parser.parse_shop_name(content)
+                star = parser.parse_shop_star(content)
 
-            add_one(shop_profile, sid=sid, shop_name=name, star=star)
-
-            print u'-- {} - {}'.format(name, star/10.0)
+                add_one(shop_profile, sid=sid, shop_name=name, star=star)
+                print u'-- {} - {} saved in db'.format(name, star/10.0)
+            except Exception as e:
+                print e
 
 
 def grab_shop_review(shop_ids, dir='cache/shop_review'):
-    review_item_ptn = re.compile(r'<a target="_blank" title="" href="/member/(\d+)">(.+?)</a>')
+    review_item_ptn = re.compile(r'href="/member/(\d+)">(.+?)</a>')
+    review_url_ptn = ('http://www.dianping.com/shop/{id}'
+                      '/review_more?pageno={page}')
+
     for sid in shop_ids:
         if not exists(job_shop_review, sid=sid):
-            review_url_ptn = ''.join([
-                'http://www.dianping.com/shop/',
-                sid,
-                '/review_more?pageno={}',
-                ])
-            target = Pagination(review_url_ptn, review_item_ptn)
-            filename = ''.join([
-                dir,
-                '/review_',
-                sid,
-                '_{}.html',
-                ])
+            target = Pagination(review_item_ptn, review_url_ptn,
+                                sid, id_name='shop_ID')
+
+            filename = ''.join([dir, '/review_', sid, '_{page}.html'])
             print 'request reviews of shop {}'.format(sid)
             request_pages(target, 9, filename_ptn=filename)
             print '--got {} reviews'.format(len(target.data))
