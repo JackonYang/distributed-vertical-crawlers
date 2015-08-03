@@ -37,13 +37,16 @@ def request(url, timeout=2, method='GET', filename=None):
     """return None if timeout"""
     h = Http(timeout=timeout)
     try:
+        log.debug('request {}'.format(url))
         rsp, content = h.request(url, method)
     except socket.timeout:
+        log.warning('timeout while requesting {}'.format(url))
         return None
 
     if filename:
         with open(filename, 'w') as f:
             f.write(content)
+        log.info('{} saved'.format(filename))
 
     return content
 
