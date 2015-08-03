@@ -50,3 +50,9 @@ Data Bang
     可以持续解析 shop_profile 页面, 得到 name, star 信息并保存.
 
     存在个别页面, 关联的 shop 是死链接. 比如 http://www.dianping.com/shop/2461414 的分店 http://www.dianping.com/shop/15923760
+
+- [b3684496541003ebfe08d622913ad410412f00d8](https://github.com/JackonYang/dataBang/commit/b3684496541003ebfe08d622913ad410412f00d8)
+
+    utils.py 中引入 log4f.py 文件打印日志, 重构之后发现 utils.py 就是一个垂直爬虫的 request 框架. 更名为 req.py
+
+    shop 主页和评论的爬取, 都使用 req 重构, 支持写日志.
