@@ -62,9 +62,7 @@ def request_pages(target, page_range=100, filename_ptn=None):
 
     # request next page until no more items detected
     for page in page_range:
-        filename=None
-        if filename_ptn:
-            filename=filename_ptn.format(page)
+        filename = filename_ptn and filename_ptn.format(page)
         content = request(target.url(page), filename=filename)
         if not target.parse(content, page):
             break
