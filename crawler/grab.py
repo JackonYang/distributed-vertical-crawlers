@@ -2,11 +2,14 @@
 import re
 import os
 
-from db import job_shop_review, shop_profile
+from db import job_shop_review
 from db import add_one, exists
-import parser
+from parser import parse_shop_name
 
 from req import request, request_pages, Pagination
+from log4f import debug_logger
+
+log = debug_logger('log/dianping', 'dianping')
 
 
 def grab_cate():
@@ -23,17 +26,12 @@ def grab_shop_profile(sids, dir='cache/shops'):
         url = 'http://www.dianping.com/shop/{}'.format(sid)
         filename = '{}/{}.html'.format(dir, sid)
         if not os.path.exists(filename):
-            print 'grab_shop. {}'.format(sid)
+            log.info('download profile. shop ID={}'.format(sid))
             try:
                 content = request(url, filename=filename)
-
-                name = parser.parse_shop_name(content)
-                star = parser.parse_shop_star(content)
-
-                add_one(shop_profile, sid=sid, shop_name=name, star=star)
-                print u'-- {} - {} saved in db'.format(name, star/10.0)
+                log.info(u'-- shop name = {}'.format(parse_shop_name(content)))
             except Exception as e:
-                print e
+                log.error(e)
 
 
 def grab_shop_review(shop_ids, dir='cache/shop_review'):
