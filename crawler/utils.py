@@ -40,7 +40,6 @@ def request(url, timeout=2, method='GET', filename=None):
         log.debug('request {}'.format(url))
         rsp, content = h.request(url, method)
     except socket.timeout:
-        log.warning('timeout while requesting {}'.format(url))
         return None
 
     if filename:
@@ -73,25 +72,34 @@ def request_pages(target, page_range=100, filename_ptn=None):
 
 
 class Pagination:
-    def __init__(self, url_ptn, item_ptn, max_failed=5):
-        self.url_ptn = url_ptn
+    def __init__(self, item_ptn, url_ptn,
+                 data_id, id_name='xxx_ID',
+                 max_failed=5, resend_times=3):
         self.item_ptn = item_ptn
+
+        self.url_ptn = url_ptn
+        self.id_name = id_name
+        self.data_id = data_id
+
         self.max_failed = max_failed
-        self.num_resend = 3
+        self.num_resend = resend_times
 
         self.data = []
         self.failed_seq = set()
 
     def url(self, page):
-        return self.url_ptn.format(page)
+        return self.url_ptn.format(id=self.data_id, page=page)
 
     def parse(self, content, page):
+        log_data = [self.id_name, page, self.data_id]
         if content is None:  # Error
+            log.warning('failed to request page/{} {}/{}'.format(*log_data))
             self.failed_seq.add(page)
             return self.go_on()
 
         items = self.item_ptn.findall(content)
         if not items:
+            log.debug('0 items found in page/{} {}/{}'.format(*log_data))
             return False
 
         self.data.extend(items)
@@ -111,15 +119,12 @@ class Pagination:
 
 if __name__ == '__main__':
 
-    review_item_ptn = re.compile(r'<a target="_blank" title="" href="/member/(\d+)">(.+?)</a>')
+    review_item_ptn = re.compile(r'href="/member/(\d+)">(.+?)</a>')
+    review_url_ptn = 'http://www.dianping.com/shop/{id}/review_more?pageno={page}'
 
-    shop_id = '16005090'
-    review_url_ptn = ''.join([
-        'http://www.dianping.com/shop/',
-        shop_id,
-        '/review_more?pageno={}',
-        ])
-    target = Pagination(review_url_ptn, review_item_ptn)
+    shop_id = '5195730'  # 45 reviews on 2015.8.3
+    target = Pagination(review_item_ptn, review_url_ptn,
+                        shop_id, id_name='shop_ID')
 
     request_pages(target, 10)
 
