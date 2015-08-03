@@ -6,29 +6,28 @@ from httplib2 import Http
 import time
 import random
 
+from log4f import debug_logger
 
+log = debug_logger('log/request', 'root.request')
 _last_req = None
 
 
-def delay():
+def delay(bottom=1, top=2):
     global _last_req
-
     if _last_req is None:
         _last_req = time.time()
-        return
+        return 0
 
-    t_delay = random.uniform(2, 10)  # wait 2-10s, avg: 6s
-    next_req = _last_req + t_delay
-    now = time.time()
-    print '----delay: {}'.format(t_delay)
-    if next_req > now:
-        time.sleep(next_req-now)
-    _last_req = next_req
+    delay = max(0,
+                _last_req+random.uniform(bottom, top)-time.time())
+    time.sleep(delay)
+    _last_req = time.time()
+    return delay
 
 
 def wait(f):
     def _wrap_func(*args, **kwargs):
-        delay()
+        log.debug('...wait {:.2f} sec'.format(delay()))
         return f(*args, **kwargs)
     return _wrap_func
 
