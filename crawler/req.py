@@ -12,7 +12,7 @@ log = debug_logger('log/request', 'root.request')
 _last_req = None
 
 
-def delay(bottom=1, top=2):
+def delay(bottom=2, top=7):
     global _last_req
     if _last_req is None:
         _last_req = time.time()
