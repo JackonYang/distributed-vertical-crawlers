@@ -59,13 +59,31 @@ def grab_shop_review(shop_ids, dir='cache/shop_review', max_page=100):
             add_one(job_shop_review, sid=sid, num=len(target.data))
 
 
+def get_files(dir, files_prefix=''):
+    for filename in os.listdir(dir):
+        if filename.endswith('.html') and filename.startswith(files_prefix):
+            with open(os.path.join(dir, filename)) as f:
+                yield (filename[:-5], ''.join(f.readlines()))
+
+
+def detect(content, re_str):
+    prog = re.compile(re_str, re.DOTALL)
+    return set(prog.findall(content))
+
+
 if __name__ == '__main__':
-    sids = []
-    with open('data/shops.txt', 'r') as f:
-        sids = [sid.strip() for sid in f.readlines()]
+    dir_shop_profile = 'cache/profile'
+    shop_id_ptn = r'href="/shop/(\d+)(?:\?[^"]+)?"'
+
+    # get shop id set
+    sids = set()
+    print 'detecting shop ids'
+    for sid, content in get_files(dir_shop_profile):
+        sids.update(detect(content, shop_id_ptn))
+    print '{} found'.format(len(sids))
 
     from parser import parse_shop_name
     dianping_url = 'http://www.dianping.com/shop/{}'
-    profile(sids, dianping_url, parse_shop_name, website='dianping')
+    profile(sids, dianping_url, parse_shop_name, website='dianping', dir=dir_shop_profile)
 
     # grab_shop_review(sids)
