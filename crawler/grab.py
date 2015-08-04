@@ -4,7 +4,6 @@ import os
 
 from db import job_shop_review
 from db import add_one, exists
-from parser import parse_shop_name
 
 from req import request, request_pages, Pagination
 from log4f import debug_logger
@@ -21,20 +20,29 @@ def grab_cate():
                 request(url, filename=filename)
 
 
-def grab_shop_profile(sids, dir='cache/shops'):
-    for sid in sids:
-        url = 'http://www.dianping.com/shop/{}'.format(sid)
-        filename = '{}/{}.html'.format(dir, sid)
-        if not os.path.exists(filename):
-            log.info('download profile. shop ID={}'.format(sid))
-            try:
-                content = request(url, filename=filename)
-                log.info(u'-- shop name = {}'.format(parse_shop_name(content)))
-            except Exception as e:
-                log.error(e)
+def profile(sids, url_ptn, validate, dir='cache/profile', website=''):
+
+    done = {f[:-5] for f in os.listdir(dir)}
+    todo = set(sids) - done
+    total = len(todo)
+
+    log_str = ''.join([
+        '{}/', str(total),
+        ' download ', website, ' profile. ',
+        'ID={}'])
+
+    for i, sid in enumerate(todo):
+        try:
+            url = url_ptn.format(sid)
+            filename = '{}/{}.html'.format(dir, sid)
+            log.info(log_str.format(i+1, sid))
+            content = request(url, filename=filename)
+            log.info(validate(content))
+        except Exception as e:
+            log.error(e)
 
 
-def grab_shop_review(shop_ids, dir='cache/shop_review'):
+def grab_shop_review(shop_ids, dir='cache/shop_review', max_page=100):
     review_item_ptn = re.compile(r'href="/member/(\d+)">(.+?)</a>')
     review_url_ptn = ('http://www.dianping.com/shop/{id}'
                       '/review_more?pageno={page}')
@@ -45,12 +53,10 @@ def grab_shop_review(shop_ids, dir='cache/shop_review'):
                                 sid, id_name='shop_ID')
 
             filename = ''.join([dir, '/review_', sid, '_{page}.html'])
-            print 'request reviews of shop {}'.format(sid)
-            request_pages(target, 9, filename_ptn=filename)
-            print '--got {} reviews'.format(len(target.data))
+            log.info('download reviews. shop ID={}'.format(sid))
+            request_pages(target, max_page, filename_ptn=filename)
+            log.info('number of reviews: {}'.format(len(target.data)))
             add_one(job_shop_review, sid=sid, num=len(target.data))
-        else:
-            print '{} exists'.format(sid)
 
 
 if __name__ == '__main__':
@@ -58,5 +64,8 @@ if __name__ == '__main__':
     with open('data/shops.txt', 'r') as f:
         sids = [sid.strip() for sid in f.readlines()]
 
-    grab_shop_profile(sids)
-    grab_shop_review(sids)
+    from parser import parse_shop_name
+    dianping_url = 'http://www.dianping.com/shop/{}'
+    profile(sids, dianping_url, parse_shop_name, website='dianping')
+
+    # grab_shop_review(sids)
