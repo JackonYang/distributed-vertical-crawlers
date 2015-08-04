@@ -74,13 +74,17 @@ def detect(content, re_str):
 if __name__ == '__main__':
     dir_shop_profile = 'cache/profile'
     shop_id_ptn = r'href="/shop/(\d+)(?:\?[^"]+)?"'
+    user_id_ptn = r'href="/member/(\d+)"'
 
     # get shop id set
     sids = set()
-    print 'detecting shop ids'
+    uids = set()
+    print 'detecting shop and user ids'
     for sid, content in get_files(dir_shop_profile):
         sids.update(detect(content, shop_id_ptn))
-    print '{} found'.format(len(sids))
+        uids.update(detect(content, user_id_ptn))
+    print '{} shops found'.format(len(sids))
+    print '{} users found'.format(len(uids))
 
     from parser import parse_shop_name
     dianping_url = 'http://www.dianping.com/shop/{}'
