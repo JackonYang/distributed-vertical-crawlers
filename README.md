@@ -5,9 +5,13 @@ Data Bang
 
 #### 开发计划
 
-1. 餐厅 list
-2. 餐厅的点评及其用户
-3. 用户的个人页面
+1. detect shop ID.
+
+     从已经下载的页面中解析出 ID. 起始页面, 人工选择一个皆可. 建议选择 shop list 页面.
+2. download shop profile page
+3. profile page 中解析出 review(评论), 评论数 大于等于 20 的, 加入 reviews 下载任务中.
+4. shop review page 下载.
+5. 用户的个人页面
 
 先爬取页面在本地保存, 积累一定数量以后, 统一解析
 
@@ -56,3 +60,15 @@ Data Bang
     utils.py 中引入 log4f.py 文件打印日志, 重构之后发现 utils.py 就是一个垂直爬虫的 request 框架. 更名为 req.py
 
     shop 主页和评论的爬取, 都使用 req 重构, 支持写日志.
+
+- [d5fa619077859f68bea1a2b7980c3e3ecbc6aa0b](https://github.com/JackonYang/dataBang/commit/d5fa619077859f68bea1a2b7980c3e3ecbc6aa0b)
+
+    重构. 抽象出 profile 方法, 支持爬取大多数网站的个人/店铺主页.
+
+    从写爬虫开始, 就在思考一个问题:
+
+    爬取店铺主页有什么用?
+
+    现在有了答案, 很多店铺, 点评数少于 20 条. 店铺首页最多呈现 20 条点评.
+
+    所以, 先爬取首页, 解析出点评数. 如果首页为 20 条, 则爬取点评分页.
