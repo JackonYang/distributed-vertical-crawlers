@@ -48,23 +48,16 @@ def parse_shop_name(content):
 if __name__ == '__main__':
     dir_shop_profile = 'cache/shops'
 
-    sids = set()
     data_shop_profile = []
 
     searched = get_sids_db()
 
     for sid, content in get_files(dir_shop_profile):
-
-        # sids.update(find_shop_ids(content))
-
         # shop profile
         if sid not in searched:
             name = parse_shop_name(content)
             star = parse_shop_star(content)
             data_shop_profile.append(shop_profile(sid=sid, shop_name=name, star=star))
 
-    print 'number of shop ID: {}'.format(len(sids))
-    sids = sids - searched
-    print 'number of new shop ID: {}'.format(len(sids))
     add_many(data_shop_profile)
     print '{} new shop profile saved'.format(len(data_shop_profile))
