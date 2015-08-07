@@ -32,7 +32,7 @@ _addr_ptns = [
 
 def cache_idx(dir, prefix='', subfix='.html'):
     """build idx of cache files in dir.
-    
+
     return {key-id: abs filename}
     """
     validate = lambda fn: fn.startswith(prefix) and fn.endswith(subfix)
@@ -65,6 +65,7 @@ def parse_shop_profile(dir, token=';'):
     session.add_all(data)
     session.commit()
     print '{} shop basic info saved'.format(len(data))
+
 
 if __name__ == '__main__':
     dir_shop_profile = 'cache/profile'
