@@ -37,7 +37,7 @@ def profile(sids, url_ptn, validate, dir='cache/profile', website=''):
             filename = '{}/{}.html'.format(dir, sid)
             log.info(log_str.format(i+1, sid))
             content = request(url, filename=filename)
-            log.info(validate(content))
+            log.info(validate(content, sid))
         except Exception as e:
             log.error(e)
 
