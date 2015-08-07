@@ -62,7 +62,7 @@ def parse(progs, content, id, name, log_not_match=True):
         if m:
             if len(m) > 1:
                 log.error('multi-match {} {}. prog-idx={}'.format(id, name, idx))
-            return m[0]
+            return m[0].decode('utf8')
 
     if log_not_match:
         log.error('failed to match {} {}'.format(id, name))
