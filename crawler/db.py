@@ -1,75 +1,45 @@
 # -*- Encoding: utf-8 -*-
-from sqlalchemy import create_engine
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy import Column, Integer, String, TIMESTAMP
 from sqlalchemy import text
-from sqlalchemy import Sequence
+
+from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 
 
 Base = declarative_base()
-
-
-class job_shop_review(Base):
-    __tablename__ = 'job_shop_review'
-
-    id = Column(Integer, Sequence('job_shop_review_seq'), primary_key=True)
-    sid = Column(Integer)
-    num = Column(Integer)
-    timestamp = Column(TIMESTAMP, server_default=text('CURRENT_TIMESTAMP'))
-    notes = Column(String(500), default='')
-
-    def __repr__(self):
-        return '<job_shop_review(shop={}, num={})>'.format(self.sid, self.num)
+engine = None
 
 
 class shop_profile(Base):
     __tablename__ = 'shop_profile'
 
     sid = Column(String(20), primary_key=True)
-    shop_name = Column(String(100))
+    name = Column(String(100))
     star = Column(Integer)
+    addr = Column(Integer)
     timestamp = Column(TIMESTAMP, server_default=text('CURRENT_TIMESTAMP'))
-
 
     def __repr__(self):
         return '<shop_profile({}-{})>'.format(self.sid, self.shop_name)
 
 
-engine = create_engine('sqlite:///database.sqlite3')
-Base.metadata.create_all(engine)
-
-
-def add_one(table, *args, **kwargs):
-    Session = sessionmaker(bind=engine)
-    session = Session()
-    session.add(table(*args, **kwargs))
-    session.commit()
-
-
-def add_many(obj_list):
-    Session = sessionmaker(bind=engine)
-    session = Session()
-    session.add_all(obj_list)
-    session.commit()
-
-
-def exists(table, *args, **kwargs):
-    Session = sessionmaker(bind=engine)
-    session = Session()
-    return session.query(table).filter_by(*args, **kwargs).count() > 0
-
-
-def get_sids_db():
-    Session = sessionmaker(bind=engine)
-    session = Session()
-    return {d.sid for d in session.query(shop_profile).all()}
+def install(conn='sqlite:///data-dianping.sqlite3'):
+    global engine
+    engine = create_engine(conn)
+    Base.metadata.create_all(engine)
+    return sessionmaker(bind=engine)
 
 
 if __name__ == '__main__':
-    # add_one(job_shop_review, sid='1111', num=300)
-    # add_one(job_shop_review, sid='222', num=509)
+    Session = install()
+    session = Session()
+    session.add(shop_profile(sid='111', name=u'测试名称', star='40', addr=u'陕西西安'))
 
-    print exists(job_shop_review, sid='222')
-    print exists(job_shop_review, sid='224')
-    print len(get_sids_db())
+    many = [
+        shop_profile(sid='211', name=u'批量名称1', star='31', addr=u'陕西1西安'),
+        shop_profile(sid='222', name=u'批量名称2', star='32', addr=u'陕西2西安'),
+        shop_profile(sid='233', name=u'批量名称3', star='33', addr=u'陕西3西安'),
+        ]
+    session.add_all(many)
+    session.commit()
