@@ -51,9 +51,26 @@ comment_time_progs = [
     ]
 
 comment_entry_progs = [
+    # class="content"
+    re.compile(r'<p class="desc J-desc">(.+?)</p>', re.DOTALL),  # 长点评
+    re.compile(r'<p class="desc">(.+?)</p>', re.DOTALL),  # 短点评
     # class="comment-entry"
     re.compile(r'<div class="J_extra-cont Hide">(.+?)</div>', re.DOTALL),  # 长点评
     re.compile(r'<div id="review_\d+_summary">(.+?)</div>', re.DOTALL),  # 短点评
+    # class="comment-text"
+    re.compile(r'<div class="desc J_brief-cont-long Hide">\s*(.+?)\s*</div>', re.DOTALL),  # 长点评
+    re.compile(r'<div class="(?:desc )?J_brief-cont">\s*(.+?)\s*</div>', re.DOTALL),  # 长点评
+    ]
+
+comment_rec_progs = [
+    re.compile(r'<dl class="recommend-info clearfix">(.*?)</dl>', re.DOTALL),  # class="content"
+    re.compile(r'<div class="comment-recommend">(.*?)</div>', re.DOTALL),  # class="comment-text"
+    re.compile(r'<div class="comment-unit">\s*<ul>\s*(.*\S)\s*</ul>\s*</div>', re.DOTALL),  # class="comment-entry"
+    ]
+
+user_id_progs = [
+    re.compile(r'class="user-info">\s*<a.*?href="/member/(\d+)".*?>(.*?)</a>', re.DOTALL),
+    re.compile(r'<p class="name">\s*<a.*?href="/member/(\d+)".*?>(.*?)</a>', re.DOTALL),
     ]
 
 
@@ -64,7 +81,7 @@ def get_files(files_dir, files_prefix=''):
                 yield (filename[:-5], ''.join(f.readlines()))
 
 
-def parse(progs, content, id, name):
+def parse(progs, content, id, name, log_not_match=True):
     for idx, p in enumerate(progs):
         m = p.findall(content)
         if m:
@@ -72,7 +89,8 @@ def parse(progs, content, id, name):
                 log.error('multi-match {} {}. prog-idx={}'.format(id, name, idx))
             return m[0]
 
-    log.error('failed to match {} {}'.format(id, name))
+    if log_not_match:
+        log.error('failed to match {} {}'.format(id, name))
     return None
 
 
@@ -98,6 +116,8 @@ def parse_shop_cate(content, sid):
     return set()
 
 
+
+
 score0_prog = re.compile(r'<i class="icon star-from item J-star-from"></i>')
 
 
@@ -120,15 +140,14 @@ def parse_shop_comment(content, sid):
     for rev_id, text, timestamp in ret:
         star = parse(comment_star_progs, text, '{}-{}'.format(sid, rev_id), 'comment star')
         entry = parse(comment_entry_progs, text, '{}-{}'.format(sid, rev_id), 'comment entry')
-        if entry and entry.find('div')>0:
-            print entry, sid
+        recommend = parse(comment_rec_progs, text, '{}-{}'.format(sid, rev_id), 'comment recommend', log_not_match=False)
+        uid = parse(user_id_progs, text, '{}-{}'.format(sid, rev_id), 'comment user')
 
     return ret
 
 
 if __name__ == '__main__':
     dir_shop_profile = 'cache/profile'
-
 
     for sid, content in get_files(dir_shop_profile):
         name = parse_shop_name(content, sid)
