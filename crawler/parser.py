@@ -21,6 +21,11 @@ star_progs = [
     re.compile(r'class="mid-rank-stars mid-str(\d+) item">', re.DOTALL),
     ]
 
+comment_star_progs = [
+    re.compile(r'-str(\d+)'),
+    re.compile(r'-star(\d+)'),
+    ]
+
 name_progs = [
     re.compile(r'<h1 class="shop-name">\s*(.*?)\s*<.*?/h1>', re.DOTALL),
     re.compile(r'<h1 class="shop-title" itemprop="name itemreviewed">(.*?)</h1>', re.DOTALL),
@@ -43,6 +48,12 @@ cate_progs = [
 
 comment_time_progs = [
     re.compile(r'<span class="time">(.*?)</span>'),
+    ]
+
+comment_entry_progs = [
+    # class="comment-entry"
+    re.compile(r'<div class="J_extra-cont Hide">(.+?)</div>', re.DOTALL),  # 长点评
+    re.compile(r'<div id="review_\d+_summary">(.+?)</div>', re.DOTALL),  # 短点评
     ]
 
 
@@ -98,11 +109,20 @@ def has_rev(content):
     return len(re.compile(r'comment-list').findall(content)) > 0
 
 
-rev_prog = re.compile(r'<li[^>]+id="rev_(\d+)"(.+?)</li>', re.DOTALL)
+rev_prog = re.compile(r'<li[^>]+id="rev_(\d+)"(.+?)<span class="time">(.*?)</span>.*?</li>', re.DOTALL)
 
 
 def parse_shop_comment(content, sid):
     ret = rev_prog.findall(content)
+
+    # if has_rev(content) and len(ret) == 0:
+    #     print sid  # check if correct comment num parsed
+    for rev_id, text, timestamp in ret:
+        star = parse(comment_star_progs, text, '{}-{}'.format(sid, rev_id), 'comment star')
+        entry = parse(comment_entry_progs, text, '{}-{}'.format(sid, rev_id), 'comment entry')
+        if entry and entry.find('div')>0:
+            print entry, sid
+
     return ret
 
 
@@ -115,4 +135,4 @@ if __name__ == '__main__':
         star = parse_shop_star(content, sid)
         addr = parse_shop_addr(content, sid)
         tags = parse_shop_cate(content, sid)  # set of tags
-        comments = parse_shop_comment(content, sid)
+        parse_shop_comment(content, sid)
