@@ -24,7 +24,7 @@ class shop_profile(Base):
         return '<shop_profile({}-{})>'.format(self.sid, self.shop_name)
 
 
-def install(conn='sqlite:///data-dianping.sqlite3'):
+def install(conn='sqlite:///database.sqlite3'):
     global engine
     engine = create_engine(conn)
     Base.metadata.create_all(engine)
@@ -32,7 +32,7 @@ def install(conn='sqlite:///data-dianping.sqlite3'):
 
 
 if __name__ == '__main__':
-    Session = install()
+    Session = install('sqlite:///test.sqlite3')
     session = Session()
     session.add(shop_profile(sid='111', name=u'测试名称', star='40', addr=u'陕西西安'))
 
