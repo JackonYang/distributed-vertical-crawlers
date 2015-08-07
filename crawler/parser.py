@@ -12,34 +12,9 @@ ignore = {
     '13775000': u'没有评分数据',
     }
 
-
-star_progs = [
-    re.compile(r'<span title="[^">]+?" class="mid-rank-stars mid-str(\d+)"></span>', re.DOTALL),
-    re.compile(r'<p class="info shop-star">\s*<span class="mid-rank-stars mid-str(\d+)"></span>', re.DOTALL),
-    re.compile(r'<div class="comment-rst">\s*<span title="[^">]+?" class="item-rank-rst [mi]rr-star(\d+)"', re.DOTALL),
-    re.compile(r'<div class="brief-info">\s*<span title="[^">]+" class="mid-rank-stars mid-str(\d+)">', re.DOTALL),
-    re.compile(r'class="mid-rank-stars mid-str(\d+) item">', re.DOTALL),
-    ]
-
 comment_star_progs = [
     re.compile(r'-str(\d+)'),
     re.compile(r'-star(\d+)'),
-    ]
-
-name_progs = [
-    re.compile(r'<h1 class="shop-name">\s*(.*?)\s*<.*?/h1>', re.DOTALL),
-    re.compile(r'<h1 class="shop-title" itemprop="name itemreviewed">(.*?)</h1>', re.DOTALL),
-    re.compile(r'<h2 class="market-name">(.*?)</h2>', re.DOTALL),
-    re.compile(r'<h1>(.*?)</h1>', re.DOTALL),
-    ]
-
-
-addr_progs = [
-    re.compile(r'<span [^>]*?itemprop="street-address"[^>]*?>\s*(.*?)\s*</span>', re.DOTALL),
-    re.compile(r'<p class="shop-address">\s*(.*?)\s*<span>.*?</span></p>', re.DOTALL),
-    re.compile(r'<div class="shop-addr">.*?</a>(.*?)</span>', re.DOTALL),
-    re.compile(r'</a>(.*?)<a class="market-map-btn"', re.DOTALL),
-    re.compile(r'<div class="add-all">\s*<span class="info-name">(.*?)</span>', re.DOTALL),
     ]
 
 cate_progs = [
@@ -94,18 +69,6 @@ def parse(progs, content, id, name, log_not_match=True):
     return None
 
 
-def parse_shop_star(content, sid):
-    return int(parse(star_progs, content, sid, 'star') or 0)
-
-
-def parse_shop_name(content, sid):
-    return parse(name_progs, content, sid, 'shop name') or ''
-
-
-def parse_shop_addr(content, sid):
-    return parse(addr_progs, content, sid, 'shop addr') or ''
-
-
 def parse_shop_cate(content, sid):
     ptn = re.compile(r'>\s*([^<>]+?)\s*(?:</a>|</span>)', re.DOTALL)
     cate_str = parse(cate_progs, content, sid, 'shop cate')
@@ -114,8 +77,6 @@ def parse_shop_cate(content, sid):
     else:
         log.error('failed to match {} cate in step2'.format(sid))
     return set()
-
-
 
 
 score0_prog = re.compile(r'<i class="icon star-from item J-star-from"></i>')
@@ -147,11 +108,4 @@ def parse_shop_comment(content, sid):
 
 
 if __name__ == '__main__':
-    dir_shop_profile = 'cache/profile'
-
-    for sid, content in get_files(dir_shop_profile):
-        name = parse_shop_name(content, sid)
-        star = parse_shop_star(content, sid)
-        addr = parse_shop_addr(content, sid)
-        tags = parse_shop_cate(content, sid)  # set of tags
-        parse_shop_comment(content, sid)
+    pass
