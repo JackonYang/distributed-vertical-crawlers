@@ -1,7 +1,6 @@
 # -*- Encoding: utf-8 -*-
 import re
 import os
-import argparse
 
 from download import dl_profile, job_list
 from parser import parse, get_files, cache_idx, detect_keys
@@ -82,7 +81,6 @@ comment_star = lambda c, id: int(parse(_comment_star_ptns, c, id, 'comment star'
 
 
 def save_shop_basic(cache_files, session):
-    exclude = [item.sid for item in session.query(shop_profile).all()]
     data = [shop_profile(sid, shop_name(c, sid), shop_star(c, sid), shop_addr(c, sid)) for sid, c in get_files(cache_files)]
     session.add_all(data)
 
@@ -111,38 +109,24 @@ def save_shop_comment(cache_files, session):
                 ))
 
 
-def find_new_shops(cache_files):
-    new_keys = detect_keys(cache_files, _shop_id_ptn, file_new_shops)
-    print '{} new keys'.format(len(new_keys))
+def dl_shop_prof(pf_cache):
+    url = 'http://www.dianping.com/shop/{}'
+    page_name = 'dianping shop profile'
+
+    job_file = '.job/dianping-shop-profile-todo.txt'
+    find_new_sid = lambda: detect_keys(cache_idx(pf_cache), _shop_id_ptn)
+    sids = job_list(job_file, find_new_sid).load()
+
+    dl_profile(sids, url, pf_cache, validate=shop_name, page_name=page_name)
 
 
 if __name__ == '__main__':
-    dir_shop_profile = 'cache/profile'
-    url_shop_profile = 'http://www.dianping.com/shop/{}'
+    dir_shop_profile = 'test_data/dp_pf'
+    if not os.path.exists(dir_shop_profile):
+        os.makedirs(dir_shop_profile)
+    dl_shop_prof(dir_shop_profile)
 
-    file_new_shops = 'data/new-shops.txt'
-
-    args_parser = argparse.ArgumentParser()
-    args_parser.add_argument('command', type=str,
-            choices={'new_shops', 'dl_shop_profile'})
-    args = args_parser.parse_args()
-
-    cmd = args.command
-
-    # cache idx
-    cache_files = cache_idx(dir_shop_profile)
-    print '{} files exists'.format(len(cache_files))
-
-    jobs = job_list(file_new_shops)
-
-    if cmd == 'new_shops':
-        detect_keys(cache_files, _shop_id_ptn, output=file_new_shops)
-    elif cmd == 'dl_shop_profile':
-        dl_profile(jobs.load(), url_shop_profile, dir_shop_profile,
-                   validate=shop_name, website='dianping')
-    else:
-        # find new shops
-
+    """
         Session = install('sqlite:///test.sqlite3')
         session = Session()
 
@@ -151,3 +135,4 @@ if __name__ == '__main__':
         save_shop_comment(cache_files, session)
 
         session.commit()
+    """

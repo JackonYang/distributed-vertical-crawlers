@@ -9,14 +9,20 @@ log = debug_logger('log/download', 'download')
 
 
 class job_list:
-    def __init__(self, filename):
+    def __init__(self, filename, action):
         self.idx_file = filename
+        if not os.path.exists(self.idx_file):
+            self.dump(action())
 
     def load(self):
         keys = set()
         with open(self.idx_file, 'r') as fp:
             keys = {line.strip() for line in fp.readlines()}
         return keys
+
+    def dump(self, data):
+        with open(self.idx_file, 'w') as fw:
+            fw.write('\n'.join(data))
 
 
 def dl_profile(keys, url_ptn, cache_dir, validate=None, page_name=''):

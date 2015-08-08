@@ -51,19 +51,11 @@ def get_files(cache_files):
             yield (key, ''.join(fr.readlines()))
 
 
-def detect_keys(cache_files, ptn, output=None, exclude=set()):
+def detect_keys(cache_files, ptn, exclude=set()):
     new_keys = set()
     exclude.update(set(cache_files.keys()))
-
-    log.info('detect keys in {} files'.format(len(cache_files)))
 
     for key, content in get_files(cache_files):
         new_keys.update(set(ptn.findall(content))-exclude)
 
-    log.info('{} new keys found'.format(len(new_keys)))
-
-    if output:
-        with open(output, 'w') as fw:
-            fw.write('\n'.join(new_keys))
-        log.info('new keys saved in {}'.format(output))
     return new_keys
