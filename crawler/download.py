@@ -62,16 +62,18 @@ if __name__ == '__main__':
     url_pf = 'http://www.dianping.com/shop/{}'
     dir_pf = 'test_dl/pf'
 
-    import shutil
-    shutil.rmtree(dir_pf)
-    os.makedirs(dir_pf)
-
     def get_title(content, key):
         m = re.compile(r'<title>(.*?)</title>').findall(content)
         if m:
             return m[0].decode('utf8')
         else:
             return 'no title matched'
+
+    if os.path.exists(dir_pf):
+        import shutil
+        shutil.rmtree(dir_pf)
+    os.makedirs(dir_pf)
+
 
     dl_profile(keys, url_pf, dir_pf, validate=get_title, page_name='dianping shop')
     dl_profile(keys, url_pf, dir_pf, validate=get_title, page_name='dianping shop')
