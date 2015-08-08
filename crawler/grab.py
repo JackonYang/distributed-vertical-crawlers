@@ -2,9 +2,6 @@
 import re
 import os
 
-from db import job_shop_review
-from db import add_one, exists
-
 from req import request, request_pages, Pagination
 from log4f import debug_logger
 
@@ -20,7 +17,7 @@ def grab_cate():
                 request(url, filename=filename)
 
 
-def profile(sids, url_ptn, validate, dir='cache/profile', website=''):
+def grab_profile(sids, url_ptn, validate, dir='cache/grab_profile', website=''):
 
     done = {f[:-5] for f in os.listdir(dir)}
     todo = set(sids) - done
@@ -48,15 +45,13 @@ def grab_shop_review(shop_ids, dir='cache/shop_review', max_page=100):
                       '/review_more?pageno={page}')
 
     for sid in shop_ids:
-        if not exists(job_shop_review, sid=sid):
-            target = Pagination(review_item_ptn, review_url_ptn,
-                                sid, id_name='shop_ID')
+        target = Pagination(review_item_ptn, review_url_ptn,
+                            sid, id_name='shop_ID')
 
-            filename = ''.join([dir, '/review_', sid, '_{page}.html'])
-            log.info('download reviews. shop ID={}'.format(sid))
-            request_pages(target, max_page, filename_ptn=filename)
-            log.info('number of reviews: {}'.format(len(target.data)))
-            add_one(job_shop_review, sid=sid, num=len(target.data))
+        filename = ''.join([dir, '/review_', sid, '_{page}.html'])
+        log.info('download reviews. shop ID={}'.format(sid))
+        request_pages(target, max_page, filename_ptn=filename)
+        log.info('number of reviews: {}'.format(len(target.data)))
 
 
 def get_files(dir, files_prefix=''):
@@ -66,28 +61,14 @@ def get_files(dir, files_prefix=''):
                 yield (filename[:-5], ''.join(f.readlines()))
 
 
-def detect(content, re_str):
-    prog = re.compile(re_str, re.DOTALL)
-    return set(prog.findall(content))
-
-
 if __name__ == '__main__':
     dir_shop_profile = 'cache/profile'
-    shop_id_ptn = r'href="/shop/(\d+)(?:\?[^"]+)?"'
-    user_id_ptn = r'href="/member/(\d+)"'
 
     # get shop id set
     sids = set()
-    uids = set()
-    print 'detecting shop and user ids'
-    for sid, content in get_files(dir_shop_profile):
-        sids.update(detect(content, shop_id_ptn))
-        uids.update(detect(content, user_id_ptn))
-    print '{} shops found'.format(len(sids))
-    print '{} users found'.format(len(uids))
+    with open('new-shop-id.txt', 'r') as fp:
+        sids = {sid.strip() for sid in fp.readlines()}
 
-    from parser import parse_shop_name
+    from dianping import shop_name
     dianping_url = 'http://www.dianping.com/shop/{}'
-    profile(sids, dianping_url, parse_shop_name, website='dianping', dir=dir_shop_profile)
-
-    # grab_shop_review(sids)
+    grab_profile(sids, dianping_url, shop_name, website='dianping', dir=dir_shop_profile)
