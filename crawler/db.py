@@ -36,6 +36,21 @@ class shop_tags(Base):
         return u'<shop_tags({}-{})>'.format(self.sid, self.tag).encode('utf8')
 
 
+class shop_reviews(Base):
+    __tablename__ = 'shop_reviews'
+
+    rev_id = Column(String(20), primary_key=True)
+    sid = Column(String(20))
+    uid = Column(String(20))
+    star = Column(Integer)
+    entry = Column(String(5000))
+    recommend = Column(String(5000))
+    rev_time = Column(String(50))
+
+    def __repr__(self):
+        return u'<shop_tags({}-{})>'.format(self.sid, self.tag).encode('utf8')
+
+
 def install(conn='sqlite:///database.sqlite3'):
     global engine
     engine = create_engine(conn)
