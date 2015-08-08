@@ -134,7 +134,9 @@ def parse_shop_profile(dir, token=';'):
         sids.update(set(detect(c, shop_id_ptn)))
         basic_info.append(shop_profile(sid=sid, name=shop_name(c, sid), star=shop_star(c, sid), addr=shop_addr(c, sid)))
         tags.extend([shop_tags(sid=sid, tag=t) for t in parse_shop_cate(c, sid)])
-        rev.extend(parse_shop_comment(c, sid))
+        revs.extend(parse_shop_comment(c, sid))
+        if len(basic_info) % 1000 == 0:
+            print len(basic_info)
 
     news = sids - set(files.keys())
     with open('new-shop-id.txt', 'w') as fp:
