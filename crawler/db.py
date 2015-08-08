@@ -39,7 +39,8 @@ class shop_tags(Base):
 class shop_reviews(Base):
     __tablename__ = 'shop_reviews'
 
-    rev_id = Column(String(20), primary_key=True)
+    id = Column(Integer, Sequence('shop_reviews'), primary_key=True)
+    rev_id = Column(String(20))
     sid = Column(String(20))
     uid = Column(String(20))
     star = Column(Integer)
