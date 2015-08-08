@@ -109,22 +109,32 @@ def save_shop_comment(cache_files, session):
                 ))
 
 
-def dl_shop_prof(pf_cache):
+def dl_shop_prof(pf_cache, use_job_file=False, job_file='.job/dianping-shop-profile-todo.txt'):
     url = 'http://www.dianping.com/shop/{}'
     page_name = 'dianping shop profile'
 
-    job_file = '.job/dianping-shop-profile-todo.txt'
-    find_new_sid = lambda: detect_keys(cache_idx(pf_cache), _shop_id_ptn)
-    sids = job_list(job_file, find_new_sid).load()
+    sids = set()
+    if use_job_file:
+        with open(job_file, 'r') as fp:
+            sids = {line.strip() for line in fp.readlines()}
+        print 'user job file. {} sids loaded'.format(len(sids))
+    else:
+        sids = detect_keys(cache_idx(pf_cache), _shop_id_ptn)
+        print '{} new sids found'.format(len(sids))
+        with open(job_file, 'w') as fw:
+            fw.write('\n'.join(sids))
 
     dl_profile(sids, url, pf_cache, validate=shop_name, page_name=page_name)
 
 
 if __name__ == '__main__':
-    dir_shop_profile = 'test_data/dp_pf'
-    if not os.path.exists(dir_shop_profile):
-        os.makedirs(dir_shop_profile)
-    dl_shop_prof(dir_shop_profile)
+    test_dir_pf = 'test_data/dl_pf'
+
+    if not os.path.exists(test_dir_pf):
+        from download import test_prof
+        test_prof(test_dir_pf)
+
+    dl_shop_prof(test_dir_pf, use_job_file=True)
 
     """
         Session = install('sqlite:///test.sqlite3')
