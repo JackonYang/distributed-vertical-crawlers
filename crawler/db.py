@@ -20,20 +20,31 @@ class shop_profile(Base):
     addr = Column(Integer)
     timestamp = Column(TIMESTAMP, server_default=text('CURRENT_TIMESTAMP'))
 
+    def __init__(self, sid, name, star, addr):
+        self.sid = sid
+        self.name = name
+        self.star = star
+        self.addr = addr
+
     def __repr__(self):
         return u'<shop_profile({}-{})>'.format(self.sid, self.name).encode('utf8')
 
 
-class shop_tags(Base):
-    __tablename__ = 'shop_tags'
+class shop_cate(Base):
+    __tablename__ = 'shop_cate'
 
-    id = Column(Integer, Sequence('shop_tags'), primary_key=True)
+    id = Column(Integer, Sequence('shop_cate'), primary_key=True)
     sid = Column(String(20))
     tag = Column(String(100))
     timestamp = Column(TIMESTAMP, server_default=text('CURRENT_TIMESTAMP'))
 
+
+    def __init__(self, sid, tag):
+        self.sid = sid
+        self.tag = tag
+
     def __repr__(self):
-        return u'<shop_tags({}-{})>'.format(self.sid, self.tag).encode('utf8')
+        return u'<shop_cate({}-{})>'.format(self.sid, self.tag).encode('utf8')
 
 
 class shop_reviews(Base):
@@ -49,7 +60,7 @@ class shop_reviews(Base):
     rev_time = Column(String(50))
 
     def __repr__(self):
-        return u'<shop_tags({}-{})>'.format(self.sid, self.tag).encode('utf8')
+        return u'<shop_review({}-{})>'.format(self.sid, self.tag).encode('utf8')
 
 
 def install(conn='sqlite:///database.sqlite3'):

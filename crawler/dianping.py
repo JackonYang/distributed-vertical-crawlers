@@ -2,9 +2,9 @@
 import re
 import os
 
-from parser import parse, detect
+from parser import parse, get_files, cache_idx
 
-from db import install, shop_profile, shop_tags, shop_reviews
+from db import install, shop_profile, shop_cate, shop_reviews
 
 _star_ptns = [
     re.compile(r'<span title="[^">]+?" class="mid-rank-stars mid-str(\d+)"></span>', re.DOTALL),
@@ -29,10 +29,10 @@ _addr_ptns = [
     re.compile(r'<div class="add-all">\s*<span class="info-name">(.*?)</span>', re.DOTALL),
     ]
 
-cate_progs = [
+_cate_progs = [
     re.compile(r'<div class="breadcrumb">(.*?)</div>', re.DOTALL),
     ]
-cate_field_progs = re.compile(r'>\s*([^<>]+?)\s*(?:</a>|</span>)', re.DOTALL)
+_cate_field_progs = re.compile(r'>\s*([^<>]+?)\s*(?:</a>|</span>)', re.DOTALL)
 
 shop_id_ptn = re.compile(r'href="/shop/(\d+)(?:\?[^"]+)?"')
 user_id_ptn = re.compile(r'href="/member/(\d+)"')
@@ -79,11 +79,6 @@ comment_user = lambda c, id: parse(_comment_user_ptns, c, id, 'comment user')
 comment_star = lambda c, id: int(parse(_comment_star_ptns, c, id, 'comment star') or 0)
 
 
-def parse_shop_cate(content, sid):
-    cate_str = parse(cate_progs, content, sid, 'shop cate') or ''
-    return set(cate_field_progs.findall(cate_str)) - {'&gt;'}
-
-
 def parse_shop_comment(content, sid):
     reviews = review_ptn.findall(content)
 
@@ -104,54 +99,28 @@ def parse_shop_comment(content, sid):
     return ret
 
 
-def cache_idx(dir, prefix='', subfix='.html'):
-    """build idx of cache files in dir.
-
-    return {key-id: abs filename}
-    """
-    validate = lambda fn: fn.startswith(prefix) and fn.endswith(subfix)
-    key = lambda fn: fn[len(prefix): -len(subfix)]
-
-    return {key(fn): os.path.join(dir, fn)
-            for fn in os.listdir(dir) if validate(fn)}
+def save_shop_basic(cache_files, session):
+    data = [shop_profile(sid, shop_name(c, sid), shop_star(c, sid), shop_addr(c, sid)) for sid, c in get_files(cache_files)]
+    session.add_all(data)
 
 
-def parse_shop_profile(dir, token=';'):
-    files = cache_idx(dir)
-    print '{} files exists'.format(len(files))
-
-    basic_info = []
-    tags = []
-    revs = []
-    sids = set()
-
-    c = None
-    for sid, fn in files.items():
-        # read
-        with open(fn, 'r') as fr:
-            c = ''.join(fr.readlines())
-        # write
-        sids.update(set(detect(c, shop_id_ptn)))
-        basic_info.append(shop_profile(sid=sid, name=shop_name(c, sid), star=shop_star(c, sid), addr=shop_addr(c, sid)))
-        tags.extend([shop_tags(sid=sid, tag=t) for t in parse_shop_cate(c, sid)])
-        revs.extend(parse_shop_comment(c, sid))
-        if len(basic_info) % 1000 == 0:
-            print len(basic_info)
-
-    news = sids - set(files.keys())
-    with open('new-shop-id.txt', 'w') as fp:
-        fp.write('\n'.join(news))
-    print '{}/{}(new/total) shops found'.format(len(news), len(sids))
-
-    Session = install()
-    session = Session()
-    session.add_all(basic_info)
-    session.add_all(tags)
-    session.add_all(revs)
-    session.commit()
-    print 'saved. {} shop basic info. {} shop tags. {} reviews'.format(len(basic_info), len(tags), len(revs))
+def save_shop_cate(cache_files, session):
+    for sid, c in get_files(cache_files):
+        text = parse(_cate_progs, c, id, 'shop cate') or ''
+        tags = set(_cate_field_progs.findall(text)) - {'&raquo;'}
+        data = [shop_cate(sid, tag) for tag in tags]
+        session.add_all(data)
 
 
 if __name__ == '__main__':
-    dir_shop_profile = 'cache/profile'
-    parse_shop_profile(dir_shop_profile)
+    dir_shop_profile = 'cache/test'
+    cache_files = cache_idx(dir_shop_profile)
+    print '{} files exists'.format(len(cache_files))
+
+    Session = install('sqlite:///test.sqlite3')
+    session = Session()
+
+    save_shop_basic(cache_files, session)
+    save_shop_cate(cache_files, session)
+
+    session.commit()
