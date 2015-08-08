@@ -13,7 +13,7 @@ ignore = {
     }
 
 
-def cache_idx(cache_dir, prefix='', subfix='.html'):
+def cache_idx(cache_dir, idx_file=None, prefix='', subfix='.html'):
     """build idx of cache files in cache_dir.
 
     return {key-id: filename with abs path}
@@ -21,8 +21,12 @@ def cache_idx(cache_dir, prefix='', subfix='.html'):
     validate = lambda fn: fn.startswith(prefix) and fn.endswith(subfix)
     key = lambda fn: fn[len(prefix): -len(subfix)]
 
-    return {key(fn): os.path.join(cache_dir, fn)
-            for fn in os.listdir(cache_dir) if validate(fn)}
+    idx = {key(fn): os.path.join(cache_dir, fn)
+           for fn in os.listdir(cache_dir) if validate(fn)}
+    if idx_file:
+        with open(idx_file, 'w') as fp:
+            fp.write('\n'.join(['{},{}'.format(k, v) for k, v in idx.items()]))
+    return idx
 
 
 def parse(progs, content, id, name, log_not_match=True):
@@ -47,25 +51,19 @@ def get_files(cache_files):
             yield (key, ''.join(fr.readlines()))
 
 
-def detect_keys(cache_files, ptn, idx_file=None, exclude=set()):
+def detect_keys(cache_files, ptn, output=None, exclude=set()):
     new_keys = set()
     exclude.update(set(cache_files.keys()))
+
+    log.info('detect keys in {} files'.format(len(cache_files)))
 
     for key, content in get_files(cache_files):
         new_keys.update(set(ptn.findall(content))-exclude)
 
-    if idx_file:
-        with open(idx_file, 'w') as fw:
+    log.info('{} new keys found'.format(len(new_keys)))
+
+    if output:
+        with open(output, 'w') as fw:
             fw.write('\n'.join(new_keys))
-        print 'new keys saved in {}'.format(idx_file)
+        log.info('new keys saved in {}'.format(output))
     return new_keys
-
-
-if __name__ == '__main__':
-    dir_shop_profile = 'cache/profile'
-    cache_files = cache_idx(dir_shop_profile)
-    print '{} files exists'.format(len(cache_files))
-
-    shop_id_ptn = re.compile(r'href="/shop/(\d+)(?:\?[^"]+)?"')
-    new_keys = detect_keys(cache_files, shop_id_ptn)
-    print '{} new keys'.format(len(new_keys))
