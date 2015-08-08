@@ -13,10 +13,16 @@ ignore = {
     }
 
 
+def cache_idx(cache_dir, prefix='', subfix='.html'):
+    """build idx of cache files in cache_dir.
 
-comment_time_progs = [
-    re.compile(r'<span class="time">(.*?)</span>'),
-    ]
+    return {key-id: filename with abs path}
+    """
+    validate = lambda fn: fn.startswith(prefix) and fn.endswith(subfix)
+    key = lambda fn: fn[len(prefix): -len(subfix)]
+
+    return {key(fn): os.path.join(cache_dir, fn)
+            for fn in os.listdir(cache_dir) if validate(fn)}
 
 
 def parse(progs, content, id, name, log_not_match=True):
@@ -39,12 +45,7 @@ def detect(content, ptn):
     return ptn.findall(content)
 
 
-score0_prog = re.compile(r'<i class="icon star-from item J-star-from"></i>')
-
-
-def has_score0_notes(content):
-    return len(score0_prog.findall(content)) > 0
-
-
-def has_rev(content):
-    return len(re.compile(r'comment-list').findall(content)) > 0
+if __name__ == '__main__':
+    dir_shop_profile = 'cache/profile'
+    cache_files = cache_idx(dir_shop_profile)
+    print '{} files exists'.format(len(cache_files))
