@@ -2,9 +2,9 @@
 import re
 import os
 
-from parser import parse
+from parser import parse, detect
 
-from db import install, shop_profile
+from db import install, shop_profile, shop_tags
 
 _star_ptns = [
     re.compile(r'<span title="[^">]+?" class="mid-rank-stars mid-str(\d+)"></span>', re.DOTALL),
@@ -30,6 +30,26 @@ _addr_ptns = [
     ]
 
 
+cate_progs = [
+    re.compile(r'<div class="breadcrumb">(.*?)</div>', re.DOTALL),
+    ]
+cate_field_progs = re.compile(r'>\s*([^<>]+?)\s*(?:</a>|</span>)', re.DOTALL)
+
+
+shop_id_ptn = re.compile(r'href="/shop/(\d+)(?:\?[^"]+)?"')
+user_id_ptn = re.compile(r'href="/member/(\d+)"')
+
+
+shop_star = lambda c, sid: int(parse(_star_ptns, c, sid, 'shop star') or 0)
+shop_name = lambda c, sid: parse(_name_ptns, c, sid, 'shop name') or ''
+shop_addr = lambda c, sid: parse(_addr_ptns, c, sid, 'shop addr') or ''
+
+
+def parse_shop_cate(content, sid):
+    cate_str = parse(cate_progs, content, sid, 'shop cate') or ''
+    return set(cate_field_progs.findall(cate_str)) - {'&gt;'}
+
+
 def cache_idx(dir, prefix='', subfix='.html'):
     """build idx of cache files in dir.
 
@@ -46,25 +66,31 @@ def parse_shop_profile(dir, token=';'):
     files = cache_idx(dir)
     print '{} files exists'.format(len(files))
 
-    shop_star = lambda c, sid: int(parse(_star_ptns, c, sid, 'shop star') or 0)
+    basic_info = []
+    tags = []
+    sids = set()
 
-    shop_name = lambda c, sid: parse(_name_ptns, c, sid, 'shop name') or ''
-
-    shop_addr = lambda c, sid: parse(_addr_ptns, c, sid, 'shop addr') or ''
-
-    data = []
     c = None
     for sid, fn in files.items():
         # read
         with open(fn, 'r') as fr:
             c = ''.join(fr.readlines())
-        data.append(shop_profile(sid=sid, name=shop_name(c, sid), star=shop_star(c, sid), addr=shop_addr(c, sid)))
+        # write
+        sids.update(set(detect(c, shop_id_ptn)))
+        #basic_info.append(shop_profile(sid=sid, name=shop_name(c, sid), star=shop_star(c, sid), addr=shop_addr(c, sid)))
+        #tags.extend([shop_tags(sid=sid, tag=t) for t in parse_shop_cate(c, sid)])
+
+    news = sids - set(files.keys())
+    with open('new-shop-id.txt', 'w') as fp:
+        fp.write('\n'.join(news))
+    print '{}/{}(new/total) shops found'.format(len(news), len(sids))
 
     Session = install()
     session = Session()
-    session.add_all(data)
+    session.add_all(basic_info)
+    session.add_all(tags)
     session.commit()
-    print '{} shop basic info saved'.format(len(data))
+    print 'saved. {} shop basic info. {} shop tags'.format(len(basic_info), len(tags))
 
 
 if __name__ == '__main__':

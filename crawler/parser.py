@@ -17,9 +17,6 @@ comment_star_progs = [
     re.compile(r'-star(\d+)'),
     ]
 
-cate_progs = [
-    re.compile(r'<div class="breadcrumb">(.*?)</div>', re.DOTALL),
-    ]
 
 comment_time_progs = [
     re.compile(r'<span class="time">(.*?)</span>'),
@@ -48,14 +45,6 @@ user_id_progs = [
     re.compile(r'<p class="name">\s*<a.*?href="/member/(\d+)".*?>(.*?)</a>', re.DOTALL),
     ]
 
-
-def get_files(files_dir, files_prefix=''):
-    for filename in os.listdir(files_dir):
-        if filename[:-5] not in ignore and filename.endswith('.html') and filename.startswith(files_prefix):
-            with open(os.path.join(files_dir, filename)) as f:
-                yield (filename[:-5], ''.join(f.readlines()))
-
-
 def parse(progs, content, id, name, log_not_match=True):
     for idx, p in enumerate(progs):
         m = p.findall(content)
@@ -69,14 +58,8 @@ def parse(progs, content, id, name, log_not_match=True):
     return None
 
 
-def parse_shop_cate(content, sid):
-    ptn = re.compile(r'>\s*([^<>]+?)\s*(?:</a>|</span>)', re.DOTALL)
-    cate_str = parse(cate_progs, content, sid, 'shop cate')
-    if cate_str:
-        return set(ptn.findall(cate_str)) - {'&gt;'}
-    else:
-        log.error('failed to match {} cate in step2'.format(sid))
-    return set()
+def detect(content, ptn):
+    return ptn.findall(content)
 
 
 score0_prog = re.compile(r'<i class="icon star-from item J-star-from"></i>')
