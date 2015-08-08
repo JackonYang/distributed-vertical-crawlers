@@ -22,10 +22,11 @@ class job_list:
 def dl_profile(ids, url_ptn, cache_dir, validate=None, website=''):
     log_str = ''.join(['{}/', str(len(ids)),
                        ' download ', website, ' profile. ', 'ID={}'])
+    fails = set()
     for i, id in enumerate(ids):
         fn = os.path.join(cache_dir, '{}.html'.format(id))
         if os.path.exists(fn):
-            log.warning('{} exists'.format(fn))
+            log.info('{} exists'.format(fn))
             continue
         url = url_ptn.format(id)
         try:
@@ -34,7 +35,9 @@ def dl_profile(ids, url_ptn, cache_dir, validate=None, website=''):
             if validate:
                 log.info(u'{} saved in {}'.format(validate(content, id), fn))
         except Exception as e:
+            fails.add(id)
             log.error(e)
+    return fails
 
 
 def dl_shop_review(shop_ids, dir='cache/shop_review', max_page=100):
