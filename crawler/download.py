@@ -8,11 +8,22 @@ from log4f import debug_logger
 log = debug_logger('log/download', 'download')
 
 
-def dl_profile(ids, url_ptn, filename_ptn, validate=None, website=''):
+class job_list:
+    def __init__(self, filename):
+        self.idx_file = filename
+
+    def load(self):
+        keys = set()
+        with open(self.idx_file, 'r') as fp:
+            keys = {line.strip() for line in fp.readlines()}
+        return keys
+
+
+def dl_profile(ids, url_ptn, cache_dir, validate=None, website=''):
     log_str = ''.join(['{}/', str(len(ids)),
                        ' download ', website, ' profile. ', 'ID={}'])
     for i, id in enumerate(ids):
-        fn = filename_ptn.format(id)
+        fn = os.path.join(cache_dir, '{}.html'.format(id))
         if os.path.exists(fn):
             log.warning('{} exists'.format(fn))
             continue

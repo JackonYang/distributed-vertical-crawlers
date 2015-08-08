@@ -3,7 +3,7 @@ import re
 import os
 import argparse
 
-from download import dl_profile
+from download import dl_profile, job_list
 from parser import parse, get_files, cache_idx, detect_keys
 
 from db import install, shop_profile, shop_cate, shop_reviews
@@ -111,12 +111,6 @@ def save_shop_comment(cache_files, session):
                 ))
 
 
-def build_profile_idx(cache_dir):
-    cache_files = cache_idx(dir_shop_profile)
-
-
-
-
 def find_new_shops(cache_files):
     new_keys = detect_keys(cache_files, _shop_id_ptn, file_new_shops)
     print '{} new keys'.format(len(new_keys))
@@ -124,7 +118,6 @@ def find_new_shops(cache_files):
 
 if __name__ == '__main__':
     dir_shop_profile = 'cache/profile'
-    fn_shop_profile = os.path.join(dir_shop_profile, '{}.html')
     url_shop_profile = 'http://www.dianping.com/shop/{}'
 
     file_new_shops = 'data/new-shops.txt'
@@ -140,15 +133,12 @@ if __name__ == '__main__':
     cache_files = cache_idx(dir_shop_profile)
     print '{} files exists'.format(len(cache_files))
 
+    jobs = job_list(file_new_shops)
+
     if cmd == 'new_shops':
         detect_keys(cache_files, _shop_id_ptn, output=file_new_shops)
     elif cmd == 'dl_shop_profile':
-        # get shop id set
-        sids = set()
-        with open(file_new_shops, 'r') as fp:
-            sids = {sid.strip() for sid in fp.readlines()}
-        # download profile
-        dl_profile(sids, url_shop_profile, fn_shop_profile,
+        dl_profile(jobs.load(), url_shop_profile, dir_shop_profile,
                    validate=shop_name, website='dianping')
     else:
         # find new shops
