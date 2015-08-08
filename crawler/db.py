@@ -1,7 +1,7 @@
 # -*- Encoding: utf-8 -*-
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy import Column, Integer, String, TIMESTAMP
-from sqlalchemy import text
+from sqlalchemy import text, Sequence
 
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
@@ -21,7 +21,19 @@ class shop_profile(Base):
     timestamp = Column(TIMESTAMP, server_default=text('CURRENT_TIMESTAMP'))
 
     def __repr__(self):
-        return '<shop_profile({}-{})>'.format(self.sid, self.shop_name)
+        return u'<shop_profile({}-{})>'.format(self.sid, self.name).encode('utf8')
+
+
+class shop_tags(Base):
+    __tablename__ = 'shop_tags'
+
+    id = Column(Integer, Sequence('shop_tags'), primary_key=True)
+    sid = Column(String(20))
+    tag = Column(String(100))
+    timestamp = Column(TIMESTAMP, server_default=text('CURRENT_TIMESTAMP'))
+
+    def __repr__(self):
+        return u'<shop_tags({}-{})>'.format(self.sid, self.tag).encode('utf8')
 
 
 def install(conn='sqlite:///database.sqlite3'):
