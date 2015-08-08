@@ -39,17 +39,3 @@ def dl_shop_review(shop_ids, dir='cache/shop_review', max_page=100):
         log.info('download reviews. shop ID={}'.format(sid))
         request_pages(target, max_page, filename_ptn=filename)
         log.info('number of reviews: {}'.format(len(target.data)))
-
-
-if __name__ == '__main__':
-    # get shop id set
-    sids = set()
-    with open('new-shop-id.txt', 'r') as fp:
-        sids = {sid.strip() for sid in fp.readlines()}
-
-    # download profile
-    from dianping import shop_name
-    dianping_url = 'http://www.dianping.com/shop/{}'
-    fn_shop_profile = 'cache/profile/{}.html'
-    dl_profile(sids, dianping_url, fn_shop_profile,
-               validate=shop_name, website='dianping')
