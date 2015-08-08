@@ -30,7 +30,7 @@ def parse(progs, content, id, name, log_not_match=True):
         m = p.findall(content)
         if m:
             if len(m) > 1:
-                log.error('multi-match {} {}. prog-idx={}'.format(id, name, idx))
+                log.error('multi-match {} {} ptn-idx={}'.format(id, name, idx))
             if isinstance(m[0], str):
                 return m[0].decode('utf8')
             else:
@@ -41,11 +41,31 @@ def parse(progs, content, id, name, log_not_match=True):
     return None
 
 
-def detect(content, ptn):
-    return ptn.findall(content)
+def get_files(cache_files):
+    for key, fn in cache_files.items():
+        with open(fn, 'r') as fr:
+            yield (key, ''.join(fr.readlines()))
+
+
+def detect_keys(cache_files, ptn, idx_file=None, exclude=set()):
+    new_keys = set()
+    exclude.update(set(cache_files.keys()))
+
+    for key, content in get_files(cache_files):
+        new_keys.update(set(ptn.findall(content))-exclude)
+
+    if idx_file:
+        with open(idx_file, 'w') as fw:
+            fw.write('\n'.join(new_keys))
+        print 'new keys saved in {}'.format(idx_file)
+    return new_keys
 
 
 if __name__ == '__main__':
     dir_shop_profile = 'cache/profile'
     cache_files = cache_idx(dir_shop_profile)
     print '{} files exists'.format(len(cache_files))
+
+    shop_id_ptn = re.compile(r'href="/shop/(\d+)(?:\?[^"]+)?"')
+    new_keys = detect_keys(cache_files, shop_id_ptn)
+    print '{} new keys'.format(len(new_keys))
