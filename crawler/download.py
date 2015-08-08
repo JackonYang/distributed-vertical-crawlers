@@ -19,23 +19,23 @@ class job_list:
         return keys
 
 
-def dl_profile(ids, url_ptn, cache_dir, validate=None, website=''):
-    log_str = ''.join(['{}/', str(len(ids)),
-                       ' download ', website, ' profile. ', 'ID={}'])
+def dl_profile(keys, url_ptn, cache_dir, validate=None, page_name=''):
+    log_str = ''.join(['{}/', str(len(keys)),
+                       ' download ', page_name, ' profile. ', 'ID={}'])
     fails = set()
-    for i, id in enumerate(ids):
-        fn = os.path.join(cache_dir, '{}.html'.format(id))
+    for i, key in enumerate(keys):
+        fn = os.path.join(cache_dir, '{}.html'.format(key))
         if os.path.exists(fn):
             log.info('{} exists'.format(fn))
             continue
-        url = url_ptn.format(id)
+        url = url_ptn.format(key)
         try:
-            log.info(log_str.format(i+1, id))
+            log.info(log_str.format(i+1, key))
             content = request(url, filename=fn)
             if validate:
-                log.info(u'{} saved in {}'.format(validate(content, id), fn))
+                log.info(u'{} saved in {}'.format(validate(content, key), fn))
         except Exception as e:
-            fails.add(id)
+            fails.add(key)
             log.error(e)
     return fails
 
@@ -53,3 +53,25 @@ def dl_shop_review(shop_ids, dir='cache/shop_review', max_page=100):
         log.info('download reviews. shop ID={}'.format(sid))
         request_pages(target, max_page, filename_ptn=filename)
         log.info('number of reviews: {}'.format(len(target.data)))
+
+
+if __name__ == '__main__':
+    keys = ['22949597', '24768319', '22124523']
+
+    # -------------- test profile -------------------
+    url_pf = 'http://www.dianping.com/shop/{}'
+    dir_pf = 'test_dl/pf'
+
+    import shutil
+    shutil.rmtree(dir_pf)
+    os.makedirs(dir_pf)
+
+    def get_title(content, key):
+        m = re.compile(r'<title>(.*?)</title>').findall(content)
+        if m:
+            return m[0].decode('utf8')
+        else:
+            return 'no title matched'
+
+    dl_profile(keys, url_pf, dir_pf, validate=get_title, page_name='dianping shop')
+    dl_profile(keys, url_pf, dir_pf, validate=get_title, page_name='dianping shop')
