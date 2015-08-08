@@ -1,6 +1,5 @@
 # -*- Encoding: utf-8 -*-
 import re
-import os
 
 from parser import parse, get_files, cache_idx
 
@@ -38,7 +37,7 @@ shop_id_ptn = re.compile(r'href="/shop/(\d+)(?:\?[^"]+)?"')
 user_id_ptn = re.compile(r'href="/member/(\d+)"')
 
 
-review_ptn = re.compile(r'<li[^>]+id="rev_(\d+)"(.+?)<span class="time">(.*?)</span>.*?</li>', re.DOTALL)
+_review_ptn = re.compile(r'<li[^>]+id="rev_(\d+)"(.+?)<span class="time">(.*?)</span>.*?</li>', re.DOTALL)
 
 _comment_entry_ptns = [
     # class="content"
@@ -79,26 +78,6 @@ comment_user = lambda c, id: parse(_comment_user_ptns, c, id, 'comment user')
 comment_star = lambda c, id: int(parse(_comment_star_ptns, c, id, 'comment star') or 0)
 
 
-def parse_shop_comment(content, sid):
-    reviews = review_ptn.findall(content)
-
-    ret = []
-    for rev_id, text, rev_time in reviews:
-        id = '{}-{}'.format(sid, rev_id)
-        uid, username = comment_user(text, id)
-
-        ret.append(shop_reviews(
-            rev_id=rev_id,
-            sid=sid,
-            uid=uid,
-            star=comment_star(text, id),
-            entry=comment_entry(text, id),
-            recommend=comment_rec(text, id),
-            rev_time=rev_time.decode('utf8')
-            ))
-    return ret
-
-
 def save_shop_basic(cache_files, session):
     data = [shop_profile(sid, shop_name(c, sid), shop_star(c, sid), shop_addr(c, sid)) for sid, c in get_files(cache_files)]
     session.add_all(data)
@@ -112,6 +91,22 @@ def save_shop_cate(cache_files, session):
         session.add_all(data)
 
 
+def save_shop_comment(cache_files, session):
+    for sid, c in get_files(cache_files):
+        reviews = _review_ptn.findall(c)
+        for rev_id, text, rev_time in reviews:
+            id = '{}-{}'.format(sid, rev_id)
+            uid, username = comment_user(text, id)
+
+            session.add(shop_reviews(
+                rev_id=rev_id, sid=sid, uid=uid,
+                star=comment_star(text, id),
+                entry=comment_entry(text, id),
+                recommend=comment_rec(text, id),
+                rev_time=rev_time.decode('utf8')
+                ))
+
+
 if __name__ == '__main__':
     dir_shop_profile = 'cache/test'
     cache_files = cache_idx(dir_shop_profile)
@@ -122,5 +117,6 @@ if __name__ == '__main__':
 
     save_shop_basic(cache_files, session)
     save_shop_cate(cache_files, session)
+    save_shop_comment(cache_files, session)
 
     session.commit()
