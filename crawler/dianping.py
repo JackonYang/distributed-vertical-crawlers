@@ -1,7 +1,10 @@
 # -*- Encoding: utf-8 -*-
 import re
+import os
+import argparse
 
-from parser import parse, get_files, cache_idx
+from download import dl_profile
+from parser import parse, get_files, cache_idx, detect_keys
 
 from db import install, shop_profile, shop_cate, shop_reviews
 
@@ -33,7 +36,7 @@ _cate_progs = [
     ]
 _cate_field_progs = re.compile(r'>\s*([^<>]+?)\s*(?:</a>|</span>)', re.DOTALL)
 
-shop_id_ptn = re.compile(r'href="/shop/(\d+)(?:\?[^"]+)?"')
+_shop_id_ptn = re.compile(r'href="/shop/(\d+)(?:\?[^"]+)?"')
 user_id_ptn = re.compile(r'href="/member/(\d+)"')
 
 
@@ -79,6 +82,7 @@ comment_star = lambda c, id: int(parse(_comment_star_ptns, c, id, 'comment star'
 
 
 def save_shop_basic(cache_files, session):
+    exclude = [item.sid for item in session.query(shop_profile).all()]
     data = [shop_profile(sid, shop_name(c, sid), shop_star(c, sid), shop_addr(c, sid)) for sid, c in get_files(cache_files)]
     session.add_all(data)
 
@@ -107,16 +111,53 @@ def save_shop_comment(cache_files, session):
                 ))
 
 
+def build_profile_idx(cache_dir):
+    cache_files = cache_idx(dir_shop_profile)
+
+
+
+
+def find_new_shops(cache_files):
+    new_keys = detect_keys(cache_files, _shop_id_ptn, file_new_shops)
+    print '{} new keys'.format(len(new_keys))
+
+
 if __name__ == '__main__':
-    dir_shop_profile = 'cache/test'
+    dir_shop_profile = 'cache/profile'
+    fn_shop_profile = os.path.join(dir_shop_profile, '{}.html')
+    url_shop_profile = 'http://www.dianping.com/shop/{}'
+
+    file_new_shops = 'data/new-shops.txt'
+
+    args_parser = argparse.ArgumentParser()
+    args_parser.add_argument('command', type=str,
+            choices={'new_shops', 'dl_shop_profile'})
+    args = args_parser.parse_args()
+
+    cmd = args.command
+
+    # cache idx
     cache_files = cache_idx(dir_shop_profile)
     print '{} files exists'.format(len(cache_files))
 
-    Session = install('sqlite:///test.sqlite3')
-    session = Session()
+    if cmd == 'new_shops':
+        detect_keys(cache_files, _shop_id_ptn, output=file_new_shops)
+    elif cmd == 'dl_shop_profile':
+        # get shop id set
+        sids = set()
+        with open(file_new_shops, 'r') as fp:
+            sids = {sid.strip() for sid in fp.readlines()}
+        # download profile
+        dl_profile(sids, url_shop_profile, fn_shop_profile,
+                   validate=shop_name, website='dianping')
+    else:
+        # find new shops
 
-    save_shop_basic(cache_files, session)
-    save_shop_cate(cache_files, session)
-    save_shop_comment(cache_files, session)
+        Session = install('sqlite:///test.sqlite3')
+        session = Session()
 
-    session.commit()
+        save_shop_basic(cache_files, session)
+        save_shop_cate(cache_files, session)
+        save_shop_comment(cache_files, session)
+
+        session.commit()
