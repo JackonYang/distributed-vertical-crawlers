@@ -61,13 +61,8 @@ def dl_shop_review(shop_ids, dir='cache/shop_review', max_page=100):
         log.info('number of reviews: {}'.format(len(target.data)))
 
 
-if __name__ == '__main__':
+def test_prof(dir_pf):
     keys = ['22949597', '24768319', '22124523']
-
-    # -------------- test profile -------------------
-    url_pf = 'http://www.dianping.com/shop/{}'
-    dir_pf = 'test_dl/pf'
-
     def get_title(content, key):
         m = re.compile(r'<title>(.*?)</title>').findall(content)
         if m:
@@ -80,6 +75,12 @@ if __name__ == '__main__':
         shutil.rmtree(dir_pf)
     os.makedirs(dir_pf)
 
+    url_pf = 'http://www.dianping.com/shop/{}'
 
     dl_profile(keys, url_pf, dir_pf, validate=get_title, page_name='dianping shop')
     dl_profile(keys, url_pf, dir_pf, validate=get_title, page_name='dianping shop')
+    return dir_pf
+
+if __name__ == '__main__':
+    test_dir_pf = 'test_data/dl_pf'
+    test_prof(test_dir_pf)
