@@ -1,4 +1,6 @@
 # -*- Encoding: utf-8 -*-
+"""builk requests for some kinds of web pages
+"""
 import re
 import os
 
@@ -8,41 +10,36 @@ from log4f import debug_logger
 log = debug_logger('log/download', 'download')
 
 
-class job_list:
-    def __init__(self, filename, action):
-        self.idx_file = filename
-        if not os.path.exists(self.idx_file):
-            self.dump(action())
-
-    def load(self):
-        keys = set()
-        with open(self.idx_file, 'r') as fp:
-            keys = {line.strip() for line in fp.readlines()}
-        return keys
-
-    def dump(self, data):
-        with open(self.idx_file, 'w') as fw:
-            fw.write('\n'.join(data))
+def get_title(content, key):
+    """demo validator of builk_single"""
+    m = re.compile(r'<title>(.*?)</title>').findall(content)
+    if not m:
+        return 'No Title'
+    return m[0].decode('utf8')
 
 
-def dl_profile(keys, url_ptn, cache_dir, validate=None, page_name=''):
-    log_str = ''.join(['{}/', str(len(keys)),
-                       ' download ', page_name, ' profile. ', 'ID={}'])
+def builk_single(ids, url_ptn, cache_dir, validate=get_title, page_name=''):
+    """builk download. one single corresponding page for one ID.
+
+    usually, it is used for profile page of a user/book/shop etc.
+    """
+    log_str = ''.join(['{}/', str(len(ids)),
+                       ' download ', page_name, '. ID={}'])
     fails = set()
-    for i, key in enumerate(keys):
+    for i, key in enumerate(ids):
         fn = os.path.join(cache_dir, '{}.html'.format(key))
         if os.path.exists(fn):
-            log.info('{} exists'.format(fn))
+            log.info('{} existed. ID={}'.format(page_name, key))
             continue
         url = url_ptn.format(key)
         try:
             log.info(log_str.format(i+1, key))
             content = request(url, filename=fn)
             if validate:
-                log.info(u'{} saved in {}'.format(validate(content, key), fn))
+                log.info(u'{} found. saved in {}'.format(validate(content, key), fn))
         except Exception as e:
             fails.add(key)
-            log.error(e)
+            log.error('{}. ID={}'.format(e, key))
     return fails
 
 
@@ -61,26 +58,19 @@ def dl_shop_review(shop_ids, dir='cache/shop_review', max_page=100):
         log.info('number of reviews: {}'.format(len(target.data)))
 
 
-def test_prof(dir_pf):
-    keys = ['22949597', '24768319', '22124523']
-    def get_title(content, key):
-        m = re.compile(r'<title>(.*?)</title>').findall(content)
-        if m:
-            return m[0].decode('utf8')
-        else:
-            return 'no title matched'
-
-    if os.path.exists(dir_pf):
+def empty_path(path):
+    if os.path.exists(path):
         import shutil
-        shutil.rmtree(dir_pf)
-    os.makedirs(dir_pf)
+        shutil.rmtree(path)
+    os.makedirs(path)
 
-    url_pf = 'http://www.dianping.com/shop/{}'
-
-    dl_profile(keys, url_pf, dir_pf, validate=get_title, page_name='dianping shop')
-    dl_profile(keys, url_pf, dir_pf, validate=get_title, page_name='dianping shop')
-    return dir_pf
 
 if __name__ == '__main__':
-    test_dir_pf = 'test_data/dl_pf'
-    test_prof(test_dir_pf)
+    testdir_pf = 'test_data/dl_pf'
+
+    empty_path(testdir_pf)  # empty path for test
+
+    keys = ['22949597', '24768319', '22124523']
+    url_pf = 'http://www.dianping.com/shop/{}'
+    builk_single(keys, url_pf, testdir_pf, page_name='dianping shop profile')
+    builk_single(keys, url_pf, testdir_pf, validate=get_title, page_name='dianping shop profile')
