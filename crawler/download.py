@@ -10,6 +10,16 @@ from log4f import debug_logger
 log = debug_logger('log/download', 'download')
 
 
+class RecursiveJob:
+    def __init__(self, ptn, table=None):
+        self.table = table  # subclass of Peer in model.py
+        self.ptn = ptn
+
+    def feed(self, content, key):
+        data = set(self.ptn.findall(content))
+        return '{} items'.format(len(data))
+
+
 def get_title(content, key):
     """demo validator of builk_single"""
     m = re.compile(r'<title>(.*?)</title>').findall(content)
@@ -75,5 +85,9 @@ if __name__ == '__main__':
     keys = ['22949597', '24768319', '22124523']
     url_pf = 'http://www.dianping.com/shop/{}'
     page_name = 'dianping shop profile'
+
+    sid_ptn = re.compile(r'href="/shop/(\d+)(?:\?[^"]+)?"')
+    jobs = RecursiveJob(sid_ptn)
+
+    builk_single(keys, url_pf, testdir_pf, jobs.feed, page_name)
     builk_single(keys, url_pf, testdir_pf, page_name=page_name)
-    builk_single(keys, url_pf, testdir_pf, get_title, page_name)
