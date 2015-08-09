@@ -27,7 +27,7 @@ def delay(bottom=2, top=7):
 
 def wait(f):
     def _wrap_func(*args, **kwargs):
-        log.info('...wait {:.2f} sec'.format(delay()))
+        log.debug('...wait {:.2f} sec'.format(delay()))
         return f(*args, **kwargs)
     return _wrap_func
 
