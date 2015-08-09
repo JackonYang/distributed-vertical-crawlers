@@ -46,7 +46,7 @@ def request(url, timeout=2, method='GET', filename=None):
     if filename:
         with open(filename, 'w') as f:
             f.write(content)
-        log.info('{} saved'.format(filename))
+        log.debug('response saved. filename={}'.format(filename))
 
     return content
 
