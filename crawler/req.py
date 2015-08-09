@@ -18,16 +18,17 @@ def delay(bottom=2, top=7):
         _last_req = time.time()
         return 0
 
-    delay = max(0,
+    period = max(0,
                 _last_req+random.uniform(bottom, top)-time.time())
-    time.sleep(delay)
+    log.debug('...wait {:.2f} sec'.format(period))
+    time.sleep(period)
     _last_req = time.time()
-    return delay
+    return period
 
 
 def wait(f):
     def _wrap_func(*args, **kwargs):
-        log.debug('...wait {:.2f} sec'.format(delay()))
+        delay()
         return f(*args, **kwargs)
     return _wrap_func
 
