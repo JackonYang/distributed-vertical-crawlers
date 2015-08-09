@@ -36,7 +36,9 @@ def builk_single(ids, url_ptn, cache_dir, validate=get_title, page_name=''):
             log.info(log_str.format(i+1, key))
             content = request(url, filename=fn)
             if validate:
-                log.info(u'{} found. saved in {}'.format(validate(content, key), fn))
+                log.info(u'{} found. saved in {}'.format(
+                    validate(content, key), fn)
+                    )
         except Exception as e:
             fails.add(key)
             log.error('{}. ID={}'.format(e, key))
@@ -72,5 +74,6 @@ if __name__ == '__main__':
 
     keys = ['22949597', '24768319', '22124523']
     url_pf = 'http://www.dianping.com/shop/{}'
-    builk_single(keys, url_pf, testdir_pf, page_name='dianping shop profile')
-    builk_single(keys, url_pf, testdir_pf, validate=get_title, page_name='dianping shop profile')
+    page_name = 'dianping shop profile'
+    builk_single(keys, url_pf, testdir_pf, page_name=page_name)
+    builk_single(keys, url_pf, testdir_pf, get_title, page_name)
