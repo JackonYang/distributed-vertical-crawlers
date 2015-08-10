@@ -90,3 +90,11 @@ Data Bang
     7G shop profile 文件, 压缩后 1.2G
 
     部分用户的评论, 没有打分信息, 或者没有评论内容. 少数评论中, 包含推荐信息.
+
+- [e47f79b0e22955ac20fc986682f38f8bf4361479](https://github.com/JackonYang/dataBang/commit/e47f79b0e22955ac20fc986682f38f8bf4361479)
+
+    下载流程管理. job engine in download mudule
+
+    使用 models 中的 Peer table 子类
+
+    key1 是已抓取的页面 ID, 该页面中识别出 n 条 ID, 对应于 Peer table 中的 n 条数据. key2 是对应的 ID
