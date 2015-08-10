@@ -50,7 +50,7 @@ def grab_shop_prof(session):
 
 
 if __name__ == '__main__':
-    Session = install('sqlite:///db_dianping.sqlite3')
+    Session = install('sqlite:///cache/db_dianping.sqlite3')
     session = Session()
 
     grab_shop_prof(session)
