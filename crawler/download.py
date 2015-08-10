@@ -15,8 +15,18 @@ class RecursiveJob:
         self.table = table  # subclass of Peer in model.py
         self.ptn = ptn
 
+    def build_idx(self, path, parse_key):
+        # full scan of a path
+        print 'build idx of files in {}'.format(path)
+        for fn in os.listdir(path):
+            key = parse_key(fn)
+            if key:
+                with open(os.path.join(path, fn)) as f:
+                    self.feed(''.join(f.readlines()), key)
+
     def feed(self, content, key):
         data = set(self.ptn.findall(content))
+        print len(data)
         return '{} items'.format(len(data))
 
 
@@ -70,24 +80,27 @@ def dl_shop_review(shop_ids, dir='cache/shop_review', max_page=100):
         log.info('number of reviews: {}'.format(len(target.data)))
 
 
-def empty_path(path):
+def get_test_path():
+    path = 'test_data/dl_pf'
     if os.path.exists(path):
         import shutil
         shutil.rmtree(path)
     os.makedirs(path)
+    return path
 
 
 if __name__ == '__main__':
-    testdir_pf = 'test_data/dl_pf'
-
-    empty_path(testdir_pf)  # empty path for test
+    testdir_pf = get_test_path()
 
     keys = ['22949597', '24768319', '22124523']
     url_pf = 'http://www.dianping.com/shop/{}'
     page_name = 'dianping shop profile'
 
+    builk_single(keys, url_pf, testdir_pf, page_name=page_name)
+
     sid_ptn = re.compile(r'href="/shop/(\d+)(?:\?[^"]+)?"')
     jobs = RecursiveJob(sid_ptn)
+    jobs.build_idx(testdir_pf, lambda fn: fn.endswith('.html') and fn[:-5])
 
-    builk_single(keys, url_pf, testdir_pf, jobs.feed, page_name)
-    builk_single(keys, url_pf, testdir_pf, page_name=page_name)
+    keys2 = ['18664537', '10401458', '22124523']
+    builk_single(keys2, url_pf, testdir_pf, jobs.feed, page_name)
