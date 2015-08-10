@@ -22,14 +22,19 @@ class RecursiveJob:
 
     def build_idx(self, path, parse_key):
         # full scan of a path
-        print 'build idx of files in {}'.format(path)
+        print 'begin to build idx of files in {}'.format(path)
         for fn in os.listdir(path):
             key = parse_key(fn)
             if key:
                 with open(os.path.join(path, fn)) as f:
                     self.feed(''.join(f.readlines()), key)
         self.session.commit()
+        print 'end of build idx of files in {}'.format(path)
 
+    def get_todo(self):
+        get = lambda col:\
+            {i[0] for i in self.session.query(col).distinct().all()}
+        return get(self.table.key2) - get(self.table.key1)
 
     def feed(self, content, key, auto_commit=True):
         data = set(self.ptn.findall(content))
@@ -105,7 +110,7 @@ if __name__ == '__main__':
     url_pf = 'http://www.dianping.com/shop/{}'
     page_name = 'dianping shop profile'
 
-    builk_single(keys, url_pf, testdir_pf, page_name=page_name)
+    # builk_single(keys, url_pf, testdir_pf, page_name=page_name)
 
     class ProfilePeer(Peer):
         __tablename__ = 'ProfilePeer'
@@ -118,7 +123,8 @@ if __name__ == '__main__':
     jobs = RecursiveJob(sid_ptn, ProfilePeer, session)
     jobs.build_idx(testdir_pf, lambda fn: fn.endswith('.html') and fn[:-5])
 
-    keys2 = ['18664537', '10401458', '22124523']
-    builk_single(keys2, url_pf, testdir_pf, jobs.feed, page_name)
+    builk_single(keys, url_pf, testdir_pf, jobs.feed, page_name=page_name)
+
+    builk_single(jobs.get_todo(), url_pf, testdir_pf, jobs.feed, page_name)
 
     session.close()
