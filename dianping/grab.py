@@ -12,7 +12,6 @@ from crawler.model import install, Peer
 
 # config
 BASE_DIR = os.path.dirname(__file__)
-print BASE_DIR
 shop_prof_dir = os.path.join(BASE_DIR, 'cache/shop_prof')
 
 for path in [shop_prof_dir]:

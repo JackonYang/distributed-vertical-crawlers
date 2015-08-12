@@ -23,6 +23,7 @@ def parse(progs, content, id, name, log_not_match=True, default=''):
 def read_file(path, exclude, key):
     files = {key(fn): fn
              for fn in os.listdir(path) if key(fn) not in exclude}
+    print '{} new files'.format(len(files))
     for sid, fn in files.items():
         with open(os.path.join(path, fn), 'r') as f:
             yield (sid, ''.join(f.readlines()).decode('utf8'))
