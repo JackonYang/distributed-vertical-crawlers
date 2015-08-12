@@ -2,14 +2,12 @@
 import re
 import os
 
-from sqlalchemy import Column, Integer, String
-
 import sys
 parent = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-print parent
-import sys
 sys.path.append(parent)
-from crawler.model import install, BaseModel
+
+from crawler.model import install
+from model import ShopBasic
 from crawler.parser import parse, read_file
 
 
@@ -37,21 +35,6 @@ addr_ptns = [
     ]
 
 
-class ShopBasic(BaseModel):
-    __tablename__ = 'shop_basic'
-
-    sid = Column(String(20), primary_key=True)
-    name = Column(String(100))
-    star = Column(Integer)
-    addr = Column(Integer)
-
-    def __init__(self, sid, name, star, addr):
-        self.sid = sid
-        self.name = name
-        self.star = star
-        self.addr = addr
-
-
 def star(c, sid):
     return int(parse(star_ptns, c, sid, 'shop star', default=0))
 
@@ -66,7 +49,7 @@ def addr(c, sid):
 
 def save_shop_basic(session, shop_prof_dir):
 
-    parsed = {i for i in session.query(ShopBasic).distinct().all()}
+    parsed = {i.sid for i in session.query(ShopBasic).distinct().all()}
     print '{} shop basic parsed'.format(len(parsed))
     data = [ShopBasic(sid, name(c, sid), star(c, sid), addr(c, sid)) 
             for sid, c in read_file(shop_prof_dir, parsed, lambda fn: fn[:-5])]
@@ -77,11 +60,12 @@ def save_shop_basic(session, shop_prof_dir):
 
 
 if __name__ == '__main__':
-    path = sys.argv[1]
+    BASE_DIR = os.path.dirname(__file__)
+    shop_prof_dir = os.path.join(BASE_DIR, 'cache/shop_prof')
 
-    Session = install('sqlite:///basic.sqlite3')
+    Session = install('sqlite:///cache/dianping.sqlite3')
     session = Session()
 
-    save_shop_basic(session, path)
+    save_shop_basic(session, shop_prof_dir)
 
     session.close()
