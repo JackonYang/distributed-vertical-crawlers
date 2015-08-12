@@ -5,8 +5,6 @@ import re
 import os
 
 from req import request, request_pages, Pagination
-from model import install
-from model import Peer
 
 from log4f import debug_logger
 
@@ -111,6 +109,9 @@ if __name__ == '__main__':
     page_name = 'dianping shop profile'
 
     # builk_single(keys, url_pf, testdir_pf, page_name=page_name)
+
+    from model import install
+    from model import Peer
 
     class ProfilePeer(Peer):
         __tablename__ = 'ProfilePeer'
