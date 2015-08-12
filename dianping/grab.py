@@ -2,14 +2,17 @@
 import re
 import os
 
-from download import RecursiveJob, builk_single
+import sys
+parent = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+sys.path.append(parent)
 
-from model import install
-from model import Peer
+from crawler.download import RecursiveJob, builk_single
+from crawler.model import install, Peer
 
 
 # config
 BASE_DIR = os.path.dirname(__file__)
+print BASE_DIR
 shop_prof_dir = os.path.join(BASE_DIR, 'cache/shop_prof')
 
 for path in [shop_prof_dir]:
