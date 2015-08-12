@@ -1,5 +1,6 @@
 # -*- Encoding: utf-8 -*-
 from sqlalchemy import Column, Integer, String
+from sqlalchemy import Sequence
 
 import os
 import sys
@@ -22,6 +23,19 @@ class ShopBasic(BaseModel):
         self.name = name
         self.star = star
         self.addr = addr
+
+
+class ShopReview(BaseModel):
+    __tablename__ = 'shop_review'
+
+    id = Column(Integer, Sequence('shop_review'), primary_key=True)
+    rev_id = Column(String(20))
+    sid = Column(String(20))
+    uid = Column(String(20))
+    star = Column(Integer)
+    entry = Column(String(5000))
+    recommend = Column(String(5000))
+    rev_time = Column(String(50))
 
 
 if __name__ == '__main__':
