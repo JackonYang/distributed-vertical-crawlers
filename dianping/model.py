@@ -7,7 +7,7 @@ import sys
 parent = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 sys.path.append(parent)
 
-from crawler.model import install, BaseModel
+from crawler.model import install, BaseModel, HisCount
 
 
 class ShopBasic(BaseModel):
@@ -36,6 +36,22 @@ class ShopReview(BaseModel):
     entry = Column(String(5000))
     recommend = Column(String(5000))
     rev_time = Column(String(50))
+
+
+class CntShopReview(HisCount):
+    __tablename__ = 'shop_review_cnt'
+
+
+class ShopTags(BaseModel):
+    __tablename__ = 'shop_tags'
+
+    id = Column(Integer, Sequence('shop_tags'), primary_key=True)
+    sid = Column(String(20))
+    tag = Column(String(5000))
+
+    def __init__(self, sid, tag):
+        self.sid = sid
+        self.tag = tag
 
 
 if __name__ == '__main__':

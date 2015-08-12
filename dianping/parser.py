@@ -7,7 +7,7 @@ parent = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 sys.path.append(parent)
 
 from crawler.model import install
-from model import ShopBasic, ShopReview
+from model import ShopBasic, ShopReview, CntShopReview, ShopTags
 from crawler.parser import parse, read_file
 
 
@@ -64,6 +64,11 @@ _rev_star_ptns = [
     re.compile(r'-star(\d+)'),
     ]
 
+_cate_progs = [
+    re.compile(r'<div class="breadcrumb">(.*?)</div>', re.DOTALL),
+    ]
+_cate_field_progs = re.compile(r'>\s*([^<>]+?)\s*(?:</a>|</span>)', re.DOTALL)
+
 
 rev_entry = lambda c, id: parse(_rev_entry_ptns, c, id, 'review entry') or ''
 rev_rec = lambda c, id: parse(_rev_recommend_ptns, c, id, 'review recommend', log_not_match=False) or ''
@@ -96,13 +101,15 @@ def save_shop_basic(session, shop_prof_dir):
 
 
 def save_shop_review(session, shop_prof_dir):
-    parsed = {i.sid for i in session.query(ShopReview).distinct().all()}
+    parsed = {i.key for i in session.query(CntShopReview).distinct().all()}
     print '{} shop reviews parsed'.format(len(parsed))
 
+    cnt = []
     data = []
 
     for sid, c in read_file(shop_prof_dir, parsed, lambda fn: fn[:-5]):
         reviews = _review_ptn.findall(c)
+        cnt.append(CntShopReview(sid, len(reviews)))
         for rev_id, text, rev_time in reviews:
             id = '{}-{}'.format(sid, rev_id)
             uid, username = rev_user(text, id)
@@ -111,6 +118,20 @@ def save_shop_review(session, shop_prof_dir):
                 rev_id=rev_id, sid=sid, uid=uid,
                 star=rev_star(text, id), entry=rev_entry(text, id),
                 recommend=rev_rec(text, id), rev_time=rev_time))
+
+    session.add_all(cnt)
+    session.add_all(data)
+    session.commit()
+
+
+def save_shop_cate(session, shop_prof_dir):
+    parsed = {i.sid for i in session.query(ShopTags).distinct().all()}
+    data = []
+
+    for sid, c in read_file(shop_prof_dir, parsed, lambda fn: fn[:-5]):
+        text = parse(_cate_progs, c, id, 'shop cate')
+        tags = set(_cate_field_progs.findall(text)) - {'&raquo;'}
+        data.extend([ShopTags(sid, tag) for tag in tags])
 
     session.add_all(data)
     session.commit()
@@ -125,5 +146,6 @@ if __name__ == '__main__':
 
     save_shop_basic(session, shop_prof_dir)
     save_shop_review(session, shop_prof_dir)
+    save_shop_cate(session, shop_prof_dir)
 
     session.close()
