@@ -94,7 +94,6 @@ def save_shop_basic(session, shop_prof_dir):
     print '{} shop basic parsed'.format(len(parsed))
     data = [ShopBasic(sid, name(c, sid), star(c, sid), addr(c, sid))
             for sid, c in read_file(shop_prof_dir, parsed, lambda fn: fn[:-5])]
-    print '{} shop basic to saved'.format(len(data))
 
     session.add_all(data)
     session.commit()
@@ -126,6 +125,8 @@ def save_shop_review(session, shop_prof_dir):
 
 def save_shop_cate(session, shop_prof_dir):
     parsed = {i.sid for i in session.query(ShopTags).distinct().all()}
+    print '{} shop category parsed'.format(len(parsed))
+
     data = []
 
     for sid, c in read_file(shop_prof_dir, parsed, lambda fn: fn[:-5]):
