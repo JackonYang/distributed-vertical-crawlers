@@ -19,7 +19,7 @@ def delay(bottom=2, top=7):
         return 0
 
     period = max(0,
-                _last_req+random.uniform(bottom, top)-time.time())
+                 _last_req+random.uniform(bottom, top)-time.time())
     log.debug('...wait {:.2f} sec'.format(period))
     time.sleep(period)
     _last_req = time.time()
@@ -51,84 +51,55 @@ def request(url, timeout=2, method='GET', filename=None):
     return content
 
 
-def request_pages(target, page_range=100, filename_ptn=None):
-    """request a list of pages
+def request_pages(key, page_range, url_ptn, item_ptn, resend=3,
+                  min_num=0, max_failed=5, filename_ptn=None):
+    """request a list of pages in page_range
 
-    page_range is a set / list of pages to request.
-       if int, [1, page_range] will be generated.
     """
-    if isinstance(page_range, int):
-        page_range = range(1, page_range+1)
+    items_total = set()  # items will be out of order if some pages failed
+    failed = set()
 
-    # request next page until no more items detected
     for page in page_range:
-        filename = filename_ptn and filename_ptn.format(page=page)
-        content = request(target.url(page), filename=filename)
-        if not target.parse(content, page):
-            break
 
-    resend_pages = target.get_resend()
-    if resend_pages:
-        request_pages(target, resend_pages)
+        filename = filename_ptn and filename_ptn.format(key=key, page=page)
+        page_url = url_ptn.format(key=key, page=page)
+        content = request(page_url, filename=filename)
 
+        if content is not None:
+            items_page = item_ptn.findall(content)
+            if items_page and len(items_page) > min_num:
+                items_total.update(items_page)
+            else:
+                log.debug('nothing in page {} of {}'.format(page, key))
+                break
+        else:
+            log.warning('failed to request page {} of {}'.format(page, key))
+            failed.add(page)
+            if len(failed) > max_failed:
+                log.error('more timeout than {}'.format(max_failed))
+                return
 
-class Pagination:
-    def __init__(self, item_ptn, url_ptn,
-                 data_id, id_name='xxx_ID',
-                 max_failed=5, resend_times=3):
-        self.item_ptn = item_ptn
-
-        self.url_ptn = url_ptn
-        self.id_name = id_name
-        self.data_id = data_id
-
-        self.max_failed = max_failed
-        self.num_resend = resend_times
-
-        self.data = []
-        self.failed_seq = set()
-
-    def url(self, page):
-        return self.url_ptn.format(id=self.data_id, page=page)
-
-    def parse(self, content, page):
-        log_data = [self.id_name, page, self.data_id]
-        if content is None:  # Error
-            log.warning('failed to request page/{} {}/{}'.format(*log_data))
-            self.failed_seq.add(page)
-            return self.go_on()
-
-        items = self.item_ptn.findall(content)
-        if not items:
-            log.debug('0 items found in page/{} {}/{}'.format(*log_data))
-            return False
-
-        self.data.extend(items)
-        return True
-
-    def go_on(self):
-        return len(self.failed_seq) <= self.max_failed
-
-    def get_resend(self):
-        ret = None
-        if self.failed_seq and self.go_on() and self.num_resend:
-            ret = self.failed_seq.copy()
-            self.failed_seq.clear()
-            self.num_resend -= 1
-        return ret
+    if failed:
+        if not resend:
+            return None
+        log.debug('resend failed pages of {}'.format(key))
+        items_more = request_pages(key, failed, url_ptn, item_ptn,
+                                   resend-1, min_num, filename_ptn)
+        if items_more is None:
+            return None
+        items_total.update(items_more)
+    return items_total
 
 
 if __name__ == '__main__':
 
-    review_item_ptn = re.compile(r'href="/member/(\d+)">(.+?)</a>')
-    review_url_ptn = 'http://www.dianping.com/shop/{id}/review_more?pageno={page}'
+    url = 'http://www.dianping.com/shop/{key}/review_more?pageno={page}'
+    item_ptn = re.compile(r'href="/member/(\d+)">(.+?)</a>')
+    uid = '5195730'  # 45 reviews on 2015.8.3
+    pages = range(1, 9)
 
-    shop_id = '5195730'  # 45 reviews on 2015.8.3
-    target = Pagination(review_item_ptn, review_url_ptn,
-                        shop_id, id_name='shop_ID')
-
-    request_pages(target, 10)
-
-    for pid, name in target.data:
-        print pid, name
-    print len(target.data)
+    ret = request_pages(uid, pages, url, item_ptn, resend=3,
+                        min_num=0, max_failed=5, filename_ptn=None)
+    for user, name in ret:
+        print user, name
+    print len(ret)
