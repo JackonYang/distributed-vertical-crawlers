@@ -6,6 +6,7 @@ import sys
 parent = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 sys.path.append(parent)
 
+from argparse import ArgumentParser, FileType
 from crawler.download import RecursiveJob, builk_single, builk_pages
 from crawler.model import install, Peer, HisCount
 
@@ -106,11 +107,25 @@ if __name__ == '__main__':
     Session = install(db_pf)
     session = Session()
 
-    if len(sys.argv) > 1 and sys.argv[1] == 'init':
-        # init_shop_prof_job(session)
-        init_rev_idx(session)
-    else:
-        # grab_shop_prof(session)
+    args_parser = ArgumentParser(description='Data Bang-Distributed Vertical Crawler')
+    args_parser.add_argument('page', type=str,
+                             help='page type',
+                             choices=['profile', 'reviews'])
+    args_parser.add_argument('--rebuild', action='store_true',
+                             default=False)  # rebuild index
+
+    args = args_parser.parse_args()
+
+    page_type = args.page
+    rebuild_idx = args.rebuild
+
+    if page_type == 'profile':
+        if rebuild_idx:
+            init_shop_prof_job(session)
+        grab_shop_prof(session)
+    elif page_type == 'reviews':
+        if rebuild_idx:
+            init_rev_idx(session)
         grab_shop_reviews(session)
 
     session.close()
