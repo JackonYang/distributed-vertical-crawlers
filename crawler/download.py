@@ -77,6 +77,7 @@ def builk_single(ids, url_ptn, cache_dir, validate=get_title, page_name=''):
     return fails
 
 
+
 def dl_shop_review(shop_ids, dir='cache/shop_review', max_page=100):
     review_item_ptn = re.compile(r'href="/member/(\d+)">(.+?)</a>')
     review_url_ptn = ('http://www.dianping.com/shop/{id}'
@@ -90,42 +91,3 @@ def dl_shop_review(shop_ids, dir='cache/shop_review', max_page=100):
         log.info('download reviews. shop ID={}'.format(sid))
         request_pages(target, max_page, filename_ptn=filename)
         log.info('number of reviews: {}'.format(len(target.data)))
-
-
-def get_test_path():
-    path = 'test_data/dl_pf'
-    if os.path.exists(path):
-        import shutil
-        shutil.rmtree(path)
-    os.makedirs(path)
-    return path
-
-
-if __name__ == '__main__':
-    testdir_pf = get_test_path()
-
-    keys = ['22949597', '24768319', '22124523']
-    url_pf = 'http://www.dianping.com/shop/{}'
-    page_name = 'dianping shop profile'
-
-    # builk_single(keys, url_pf, testdir_pf, page_name=page_name)
-
-    from model import install
-    from model import Peer
-
-    class ProfilePeer(Peer):
-        __tablename__ = 'ProfilePeer'
-
-    sid_ptn = re.compile(r'href="/shop/(\d+)(?:\?[^"]+)?"')
-
-    Session = install('sqlite:///test_download.sqlite3')
-    session = Session()
-
-    jobs = RecursiveJob(sid_ptn, ProfilePeer, session)
-    jobs.build_idx(testdir_pf, lambda fn: fn.endswith('.html') and fn[:-5])
-
-    builk_single(keys, url_pf, testdir_pf, jobs.feed, page_name=page_name)
-
-    builk_single(jobs.get_todo(), url_pf, testdir_pf, jobs.feed, page_name)
-
-    session.close()
