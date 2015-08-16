@@ -4,7 +4,7 @@
 import re
 import os
 
-from req import request, request_pages, Pagination
+from req import request, request_pages
 
 from log4f import debug_logger
 
