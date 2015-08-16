@@ -51,7 +51,7 @@ def request(url, timeout=2, method='GET', filename=None):
     return content
 
 
-def request_pages(key, page_range, url_ptn, item_ptn, resend=3,
+def request_pages(key, page_range, url_ptn, find_items, resend=3,
                   min_num=0, max_failed=5, filename_ptn=None):
     """request a list of pages in page_range
 
@@ -66,7 +66,7 @@ def request_pages(key, page_range, url_ptn, item_ptn, resend=3,
         content = request(page_url, filename=filename)
 
         if content is not None:
-            items_page = item_ptn.findall(content)
+            items_page = find_items(content, key)
             if items_page and len(items_page) > min_num:
                 items_total.update(items_page)
             else:
@@ -83,7 +83,7 @@ def request_pages(key, page_range, url_ptn, item_ptn, resend=3,
         if not resend:
             return None
         log.debug('resend failed pages of {}'.format(key))
-        items_more = request_pages(key, failed, url_ptn, item_ptn,
+        items_more = request_pages(key, failed, url_ptn, find_items,
                                    resend-1, min_num, filename_ptn)
         if items_more is None:
             return None
@@ -94,11 +94,13 @@ def request_pages(key, page_range, url_ptn, item_ptn, resend=3,
 if __name__ == '__main__':
 
     url = 'http://www.dianping.com/shop/{key}/review_more?pageno={page}'
-    item_ptn = re.compile(r'href="/member/(\d+)">(.+?)</a>')
+    find_uid = lambda content, key: \
+        re.compile(r'href="/member/(\d+)">(.+?)</a>').findall(content)
+
     uid = '5195730'  # 45 reviews on 2015.8.3
     pages = range(1, 9)
 
-    ret = request_pages(uid, pages, url, item_ptn, resend=3,
+    ret = request_pages(uid, pages, url, find_uid, resend=3,
                         min_num=0, max_failed=5, filename_ptn=None)
     for user, name in ret:
         print user, name
