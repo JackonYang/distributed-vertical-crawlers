@@ -61,7 +61,7 @@ def request_pages(key, page_range, url_ptn, find_items, resend=3,
 
     for page in page_range:
 
-        filename = filename_ptn and filename_ptn.format(key=key, page=page)
+        filename = filename_ptn and filename_ptn.format(key, page)
         page_url = url_ptn.format(key=key, page=page)
         content = request(page_url, filename=filename)
 
