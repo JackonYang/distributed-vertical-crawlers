@@ -6,15 +6,16 @@ import sys
 parent = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 sys.path.append(parent)
 
-from crawler.download import RecursiveJob, builk_single
+from crawler.download import RecursiveJob, builk_single, builk_pages
 from crawler.model import install, Peer, HisCount
 
 
 # config
 BASE_DIR = os.path.dirname(__file__)
 shop_prof_dir = os.path.join(BASE_DIR, 'cache/shop_prof')
+shop_review_dir = os.path.join(BASE_DIR, 'cache/shop_review')
 
-for path in [shop_prof_dir]:
+for path in [shop_prof_dir, shop_review_dir]:
     if not os.path.exists(path):
         os.makedirs(path)
 
@@ -22,6 +23,8 @@ for path in [shop_prof_dir]:
 sid_ptn = re.compile(r'href="/shop/(\d+)(?:\?[^"]+)?"')
 rev_ptn = re.compile(r'<li[^>]+id="rev_(\d+)"')
 uid_ptn = re.compile(r'href="/member/(\d+)(?:\?[^"]+)?"')
+
+find_rev = lambda c, key: set(rev_ptn.findall(c))
 
 
 class ShopProfPeer(Peer):
@@ -78,6 +81,26 @@ def init_rev_idx(session):
     print 'end of build idx of files in {}'.format(path)
 
 
+def get_rev_todo(session, threshold=10):
+    reviews = session.query(ShopReviewCnt).\
+        filter(ShopReviewCnt.count > threshold-1)
+    return {i.key for i in reviews.all()}
+
+
+def grab_shop_reviews(session):
+    page_name = 'DianPing Shop Reviews'
+    url = 'http://www.dianping.com/shop/{key}/review_more?pageno={page}'
+
+    todo = get_rev_todo(session)
+    while todo:
+        print 'grabbing shop reviews. total: {}'.format(len(todo))
+        builk_pages(todo, url, shop_review_dir, find_rev,
+                    page_name=page_name, page_start=1)
+        todo = get_rev_todo(session)
+    else:
+        print 'no shop id found'
+
+
 if __name__ == '__main__':
     db_pf = 'sqlite:///cache/db_profile.sqlite3'
     Session = install(db_pf)
@@ -87,6 +110,7 @@ if __name__ == '__main__':
         # init_shop_prof_job(session)
         init_rev_idx(session)
     else:
-        grab_shop_prof(session)
+        # grab_shop_prof(session)
+        grab_shop_reviews(session)
 
     session.close()
