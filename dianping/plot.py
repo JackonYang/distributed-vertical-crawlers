@@ -25,6 +25,7 @@ def plot_stat(stat, total, name):
     plt.ylabel('number')
     plt.show()
 
+
 def shop_rev(session):
     rev_cnt = [item.count for item in session.query(ShopReviewCnt).all()]
     plot_stat(aggressive(rev_cnt), len(rev_cnt),
