@@ -21,11 +21,14 @@ class RecursiveJob:
     def build_idx(self, path, parse_key):
         # full scan of a path
         print 'begin to build idx of files in {}'.format(path)
-        for fn in os.listdir(path):
+        for i, fn in enumerate(os.listdir(path)):
+            if i % 5000 == 0:
+                self.session.commit()
+                print i
             key = parse_key(fn)
             if key:
                 with open(os.path.join(path, fn)) as f:
-                    self.feed(''.join(f.readlines()), key)
+                    self.feed(''.join(f.readlines()), key, auto_commit=False)
         self.session.commit()
         print 'end of build idx of files in {}'.format(path)
 
