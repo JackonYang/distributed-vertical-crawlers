@@ -7,7 +7,7 @@ parent = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 sys.path.append(parent)
 
 from crawler.download import RecursiveJob, builk_single
-from crawler.model import install, Peer
+from crawler.model import install, Peer, HisCount
 
 
 # config
@@ -20,6 +20,8 @@ for path in [shop_prof_dir]:
 
 # const
 sid_ptn = re.compile(r'href="/shop/(\d+)(?:\?[^"]+)?"')
+rev_ptn = re.compile(r'<li[^>]+id="rev_(\d+)"')
+uid_ptn = re.compile(r'href="/member/(\d+)(?:\?[^"]+)?"')
 
 
 class ShopProfPeer(Peer):
@@ -51,13 +53,39 @@ def grab_shop_prof(session):
         print 'no shop id found'
 
 
+# uid and reviews
+
+
+class ShopReviewCnt(HisCount):
+    __tablename__ = 'Shop_review_cnt'
+
+
+def init_rev_idx(session):
+    fn_key = lambda fn: fn.endswith('.html') and fn[:-5]
+
+    print 'begin to build idx of files in {}'.format(path)
+    for i, fn in enumerate(os.listdir(shop_prof_dir)):
+        if i % 5000 == 0:
+            session.commit()
+            print i
+        key = fn_key(fn)
+        if key:
+            with open(os.path.join(shop_prof_dir, fn)) as f:
+                data = set(rev_ptn.findall(''.join(f.readlines())))
+                session.add(ShopReviewCnt(key, len(data)))
+
+    session.commit()
+    print 'end of build idx of files in {}'.format(path)
+
+
 if __name__ == '__main__':
     db_pf = 'sqlite:///cache/db_profile.sqlite3'
     Session = install(db_pf)
     session = Session()
 
     if len(sys.argv) > 1 and sys.argv[1] == 'init':
-        init_shop_prof_job(session)
+        # init_shop_prof_job(session)
+        init_rev_idx(session)
     else:
         grab_shop_prof(session)
 
