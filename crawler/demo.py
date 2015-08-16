@@ -3,7 +3,7 @@ import re
 import os
 import shutil
 
-from download import RecursiveJob, builk_single
+from download import RecursiveJob, builk_single, builk_pages
 
 from model import install
 from model import Peer
@@ -48,5 +48,27 @@ def test_builk_single():
     session.close()
 
 
+def test_builk_pages():
+
+    init_test_path()
+    path = 'test_data/pages'
+    os.makedirs(path)
+    db = 'sqlite:///test_data/pages.sqlite3'
+
+    keys = ['22949597', '22124523', '5195730']
+    url_ptn = 'http://www.dianping.com/shop/{key}/review_more?pageno={page}'
+    page_name = 'dianping shop reviews'
+    find_rev = lambda content, key: \
+            re.compile(r'href="/member/(\d+)">(.+?)</a>').findall(content)
+
+    Session = install(db)
+    session = Session()
+
+    builk_pages(keys, url_ptn, path, find_rev, page_name=page_name)
+
+    session.close()
+
+
 if __name__ == '__main__':
-    test_builk_single()
+    # test_builk_single()
+    test_builk_pages()

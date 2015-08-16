@@ -80,17 +80,19 @@ def builk_single(ids, url_ptn, cache_dir, validate=get_title, page_name=''):
     return fails
 
 
+def builk_pages(ids, url_ptn, cache_dir, find_items, page_name='',
+                min_num=0, max_page=100, page_start=0):
+    log_str = ''.join(['{}/', str(len(ids)),
+                       ' download ', page_name, '. ID={}'])
+    filename_ptn = os.path.join(cache_dir, '{}_{}.html')
 
-def dl_shop_review(shop_ids, dir='cache/shop_review', max_page=100):
-    review_item_ptn = re.compile(r'href="/member/(\d+)">(.+?)</a>')
-    review_url_ptn = ('http://www.dianping.com/shop/{id}'
-                      '/review_more?pageno={page}')
-
-    for sid in shop_ids:
-        target = Pagination(review_item_ptn, review_url_ptn,
-                            sid, id_name='shop_ID')
-
-        filename = ''.join([dir, '/review_', sid, '_{page}.html'])
-        log.info('download reviews. shop ID={}'.format(sid))
-        request_pages(target, max_page, filename_ptn=filename)
-        log.info('number of reviews: {}'.format(len(target.data)))
+    for i, key in enumerate(ids):
+        try:
+            log.info(log_str.format(i+1, key))
+            ret = request_pages(key, range(page_start, max_page),
+                                url_ptn, find_items,
+                                min_num=min_num,
+                                filename_ptn=filename_ptn)
+            log.info('{} items in {}'.format(len(ret), key))
+        except Exception as e:
+            log.error('{}. ID={}'.format(e, key))
