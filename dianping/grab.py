@@ -52,9 +52,13 @@ def grab_shop_prof(session):
 
 
 if __name__ == '__main__':
-    Session = install('sqlite:///cache/db_dianping.sqlite3')
+    db_pf = 'sqlite:///cache/db_profile.sqlite3'
+    Session = install(db_pf)
     session = Session()
 
-    grab_shop_prof(session)
+    if len(sys.argv) > 1 and sys.argv[1] == 'init':
+        init_shop_prof_job(session)
+    else:
+        grab_shop_prof(session)
 
     session.close()
