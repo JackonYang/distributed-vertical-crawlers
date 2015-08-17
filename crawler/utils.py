@@ -40,6 +40,7 @@ if __name__ == '__main__':
     BASE_DIR = os.path.dirname(__file__)
     shop_review_dir = os.path.join(BASE_DIR, '../dianping/cache/shop_review')
     shop_prof_dir = os.path.join(BASE_DIR, '../dianping/cache/shop_prof')
+    user_prof_dir = os.path.join(BASE_DIR, '../dianping/cache/user_prof')
 
     conf = {'host': 'localhost',
             'port': 6379,
@@ -49,11 +50,14 @@ if __name__ == '__main__':
     r = redis.StrictRedis(**conf)
     review_name = 'dp-review'
     shop_name = 'dp-shop'  # shop profile
+    user_name = 'dp-user'  # user-profile
 
     visited(shop_review_dir, r, review_name, pagination=True)
     visited(shop_prof_dir, r, shop_name, pagination=False)
 
     rev_ptn = re.compile(r'<li[^>]+id="rev_(\d+)"')
+    sid_ptn = re.compile(r'href="/shop/(\d+)(?:\?[^"]+)?"')
+    uid_ptn = re.compile(r'href="/member/(\d+)(?:\?[^"]+)?"')
 
     def rev_func(ptn, c, filename):
         if len(ptn.findall(c)) > 9:
@@ -62,3 +66,5 @@ if __name__ == '__main__':
         return set()
 
     find_todo(shop_prof_dir, r, review_name, rev_ptn, func=rev_func)
+    find_todo(shop_prof_dir, r, shop_name, sid_ptn)
+    find_todo(shop_prof_dir, r, user_name, sid_ptn)
