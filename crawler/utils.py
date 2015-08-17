@@ -17,6 +17,7 @@ if __name__ == '__main__':
 
     BASE_DIR = os.path.dirname(__file__)
     shop_review_dir = os.path.join(BASE_DIR, '../dianping/cache/shop_review')
+    shop_prof_dir = os.path.join(BASE_DIR, '../dianping/cache/shop_prof')
 
     conn = {'host': 'localhost',
             'port': 6379,
@@ -24,6 +25,8 @@ if __name__ == '__main__':
             }
 
     r = redis.StrictRedis(**conn)
-    name = 'dp-review'
+    review_name = 'dp-review'
+    shop_name = 'dp-shop'  # shop profile
 
-    visited(shop_review_dir, r, name, pagination=True)
+    visited(shop_review_dir, r, review_name, pagination=True)
+    visited(shop_prof_dir, r, shop_name, pagination=False)
