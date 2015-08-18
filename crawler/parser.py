@@ -64,13 +64,14 @@ def read_file(path, exclude, key):
 if __name__ == '__main__':
 
     jobs = (
-            ('user-id', re.compile(r'href="/member/(\d+)(?:\?[^"]+)?"')),
-            ('review-id', re.compile(r'<li[^>]+id="rev_(\d+)"')),
-            )
+        ('user-id', re.compile(r'href="/member/(\d+)(?:\?[^"]+)?"')),
+        ('shop-id', re.compile(r'href="/shop/(\d+)(?:\?[^"]+)?"')),
+        ('review-id', re.compile(r'<li[^>]+id="rev_(\d+)"')),
+        )
 
     scan_dir = '../dianping/cache/shop_prof'
 
     for name, ptn in jobs:
-        idx_file= '../dianping/cache/index/{}.json'.format(name)
+        idx_file = '../dianping/cache/index/{}.json'.format(name)
         print 'indexing {}, save to {}'.format(name, idx_file)
         Indexing(ptn, idx_file).scan(scan_dir)
