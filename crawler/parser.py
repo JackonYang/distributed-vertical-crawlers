@@ -39,6 +39,15 @@ class Indexing:
         self.save()
 
 
+def visited(path, pagination=False, subfix='.html'):
+    if pagination:
+        key = lambda filename: filename[:filename.find('_')]
+    else:
+        key = lambda filename: filename[:-5]
+
+    return {key(fn) for fn in os.listdir(path) if fn.endswith(subfix)}
+
+
 def parse(progs, content, id, name, log_not_match=True, default=''):
     for idx, p in enumerate(progs):
         m = p.findall(content)
@@ -75,3 +84,11 @@ if __name__ == '__main__':
         idx_file = '../dianping/cache/index/{}.json'.format(name)
         print 'indexing {}, save to {}'.format(name, idx_file)
         Indexing(ptn, idx_file).scan(scan_dir)
+
+
+    shop_review_dir = '../dianping/cache/shop_review'
+    shop_prof_dir = '../dianping/cache/shop_prof'
+    user_prof_dir = '../dianping/cache/user_prof'
+
+    print len(visited(shop_review_dir, pagination=True))
+    print len(visited(shop_prof_dir, pagination=False))
