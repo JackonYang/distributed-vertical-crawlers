@@ -36,6 +36,8 @@ class Indexing:
                 print 'saving. {} done.'.format(i+1)
                 self.save()
 
+        self.save()
+
 
 def parse(progs, content, id, name, log_not_match=True, default=''):
     for idx, p in enumerate(progs):
