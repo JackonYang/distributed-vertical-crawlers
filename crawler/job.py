@@ -7,11 +7,10 @@ import json
 from os.path import join
 
 
-cache_root = '../dianping/cache'
 
 
 class JobPool:
-    def __init__(self, db, job_name, pagination=True, subfix='.html', timeout=10):
+    def __init__(self, db, cache_root, job_name, pagination=True, subfix='.html', timeout=10):
         self.cache_dir = join(cache_root, job_name)
         self.job_file = join(cache_root, 'job_{}.json'.format(job_name))
 
@@ -62,7 +61,7 @@ class JobPool:
 
     def add_force(self, *keys):
         self.db.rpush(self.todo_tbl, *key)
-        return self.db.sadd(self.total_tbl, *key):
+        return self.db.sadd(self.total_tbl, *key)
 
     def _load(self):
         data = dict()
@@ -84,8 +83,9 @@ if __name__ == '__main__':
 
     import redis
     r = redis.StrictRedis()
+    cache_root = '../dianping/cache'
     job_name = 'shop_review'
-    repo = JobPool(r, job_name, pagination=True)
+    repo = JobPool(r, cache_root, job_name, pagination=True)
 
     shop_prof_dir = '../dianping/cache/shop_prof'
     ptn = re.compile(r'<li[^>]+id="rev_(\d+)"')
@@ -95,6 +95,9 @@ if __name__ == '__main__':
     repo.init_db(total)
 
     key = repo.next()
+    i = 0
     while key:
+        i += 1
         print key
         key = repo.next()
+    print i
