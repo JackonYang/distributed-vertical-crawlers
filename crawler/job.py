@@ -1,16 +1,14 @@
 # -*- Encoding: utf-8 -*-
 import re
 import os
-import time 
 import json
 
 from os.path import join
 
 
-
-
 class JobPool:
-    def __init__(self, db, cache_root, job_name, pagination=True, subfix='.html', timeout=10):
+    def __init__(self, db, cache_root, job_name,
+                 pagination=True, subfix='.html', timeout=10):
         self.cache_dir = join(cache_root, job_name)
         self.job_file = join(cache_root, 'job_{}.json'.format(job_name))
 
@@ -76,7 +74,8 @@ class JobPool:
 
     def _done(self):
         return {self.key(fn)
-                for fn in os.listdir(self.cache_dir) if fn.endswith(self.subfix)}
+                for fn in os.listdir(self.cache_dir)
+                if fn.endswith(self.subfix)}
 
 
 if __name__ == '__main__':
@@ -85,19 +84,19 @@ if __name__ == '__main__':
     r = redis.StrictRedis()
     cache_root = '../dianping/cache'
     job_name = 'shop_review'
-    repo = JobPool(r, cache_root, job_name, pagination=True)
+    job = JobPool(r, cache_root, job_name, pagination=True)
 
     shop_prof_dir = '../dianping/cache/shop_prof'
     ptn = re.compile(r'<li[^>]+id="rev_(\d+)"')
-    repo.scan(shop_prof_dir, ptn)
+    job.scan(shop_prof_dir, ptn)
 
-    total = {key[:-5] for key, vs in repo.data.items() if len(vs) > 9}
-    repo.init_db(total)
+    total = {key[:-5] for key, vs in job.data.items() if len(vs) > 9}
+    job.init_db(total)
 
-    key = repo.next()
+    key = job.next()
     i = 0
     while key:
         i += 1
         print key
-        key = repo.next()
+        key = job.next()
     print i
