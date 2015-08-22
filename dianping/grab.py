@@ -79,14 +79,11 @@ def grab_user_prof(conn_redis):
 
 
 def grab_shop_reviews(conn_redis, threshold=10):
-
-    cache_root = 'cache'
     job_name = 'shop_review'
     job = JobPool(conn_redis, cache_root, job_name, pagination=True)
 
-    job.scan(shop_prof_dir, rev_ptn)
-    total = {key[:-5] for key, vs in job.data.items() if len(vs) > 9}
-    job.init_db(total)
+    find_job = lambda data: {key[:-5] for key, vs in data.items() if len(vs) > 9}
+    job.scan(shop_prof_dir, rev_ptn, find_job)
 
     url = 'http://www.dianping.com/shop/{key}/review_more?pageno={page}'
 

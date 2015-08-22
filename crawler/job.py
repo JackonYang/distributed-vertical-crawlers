@@ -40,9 +40,9 @@ class JobPool:
             if i % save_period == 0:
                 print 'saving. {} done.'.format(i+1)
                 self._save(find_job)
-
-        print 'saving. {} done.'.format(i+1)
-        self._save(find_job)
+        else:
+            print 'saving. {} done.'.format(len(todo))
+            self._save(find_job)
 
     def count(self):
         return self.db.llen(self.todo_tbl)
