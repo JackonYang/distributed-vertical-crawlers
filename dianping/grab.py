@@ -74,6 +74,7 @@ def grab_user_prof(conn_redis):
     key = job.next()
     while key:
         key = job.next()
+        builk_single(todo, url, shop_prof_dir, jobs.feed, page_name)
     else:
         print 'no more jobs'
 
@@ -88,13 +89,8 @@ def grab_shop_reviews(conn_redis, threshold=10):
     url = 'http://www.dianping.com/shop/{key}/review_more?pageno={page}'
 
     print 'grabbing shop reviews... TODO: {}'.format(job.count())
-    key = job.next()
-    while key:
-        builk_pages(job, url, shop_review_dir, find_item=find_rev,
-                    page_start=1, recursive=False)
-        key = job.next()
-    else:
-        print 'no more jobs'
+    builk_pages(job, url, shop_review_dir, find_item=find_rev,
+                page_start=1, recursive=False)
 
 
 if __name__ == '__main__':
