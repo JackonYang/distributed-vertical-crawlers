@@ -19,6 +19,8 @@ shop_prof_dir = os.path.join(BASE_DIR, 'cache/shop_prof')
 shop_review_dir = os.path.join(BASE_DIR, 'cache/shop_review')
 shop_review_idx = os.path.join(BASE_DIR, 'cache/index/review-id.json')
 
+cache_root = 'cache'
+
 for path in [shop_prof_dir, shop_review_dir]:
     if not os.path.exists(path):
         os.makedirs(path)
@@ -61,11 +63,19 @@ def grab_shop_prof(session):
         print 'no shop id found'
 
 
-# uid and reviews
+def grab_user_prof(conn_redis):
+    job_name = 'user_prof'
+    job = JobPool(conn_redis, cache_root, job_name, pagination=False)
 
+    find_job = lambda data: {v for vs in data.values() for v in vs}
+    job.scan(shop_review_dir, uid_ptn, find_job)
 
-class ShopReviewCnt(HisCount):
-    __tablename__ = 'Shop_review_cnt'
+    print 'grabbing user profiles... TODO: {}'.format(job.count())
+    key = job.next()
+    while key:
+        key = job.next()
+    else:
+        print 'no more jobs'
 
 
 def grab_shop_reviews(conn_redis, threshold=10):
@@ -96,13 +106,12 @@ if __name__ == '__main__':
     session = Session()
 
     r = redis.StrictRedis()
-    r.flushall()
 
     args_parser = ArgumentParser(
         description='Data Bang-Distributed Vertical Crawler')
     args_parser.add_argument('page', type=str,
                              help='page type',
-                             choices=['profile', 'reviews'])
+                             choices=['profile', 'reviews', 'user_prof'])
     args_parser.add_argument('--rebuild', action='store_true',
                              default=False)  # rebuild index
 
@@ -117,5 +126,7 @@ if __name__ == '__main__':
         grab_shop_prof(session)
     elif page_type == 'reviews':
         grab_shop_reviews(r)
+    elif page_type == 'user_prof':
+        grab_user_prof(r)
 
     session.close()
