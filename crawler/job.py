@@ -23,7 +23,9 @@ class JobPool:
         self.total_tbl = '{}:total'.format(job_name)
         self.todo_tbl = '{}:todo'.format(job_name)
 
-    def scan(self, path, ptn, save_period=2000):
+        self.db.sadd(self.total_tbl, *self._done())
+
+    def scan(self, path, ptn, find_job, save_period=2000):
         total = set(os.listdir(path))
         todo = total - set(self.data.keys())
         print '{}/{} to parse.'.format(len(todo), len(total))
@@ -35,15 +37,9 @@ class JobPool:
 
             if i % save_period == 0:
                 print 'saving. {} done.'.format(i+1)
-                self._save()
+                self._save(find_job)
 
-        self._save()
-
-    def init_db(self, total):
-        # todo: clear table
-        self.db.sadd(self.total_tbl, *total)
-        todo = set(total) - self._done()
-        self.db.rpush(self.todo_tbl, *todo)
+        self._save(find_job)
 
     def count(self):
         return self.db.llen(self.todo_tbl)
@@ -53,8 +49,8 @@ class JobPool:
         return key and key[1]
 
     def add(self, *keys):
-        _total = self.db.smembers(self.total_tbl)
-        _todo = set(keys) - set(_total)
+        existed = self.db.smembers(self.total_tbl)
+        _todo = set(keys) - set(existed)
         if _todo:
             self.db.sadd(self.total_tbl, *_todo)
             self.db.rpush(self.todo_tbl, *_todo)
@@ -71,7 +67,8 @@ class JobPool:
                 data = json.load(fr)
         return data
 
-    def _save(self):
+    def _save(self, find_job):
+        self.add(*find_job(self.data))
         with open(self.job_file, 'wb') as fw:
             json.dump(self.data, fw, indent=4)
 
@@ -92,15 +89,9 @@ if __name__ == '__main__':
 
     shop_prof_dir = '../dianping/cache/shop_prof'
     ptn = re.compile(r'<li[^>]+id="rev_(\d+)"')
-    job.scan(shop_prof_dir, ptn)
 
-    total = {key[:-5] for key, vs in job.data.items() if len(vs) > 9}
-    job.init_db(total)
+    find_job = lambda data: {key[:-5] for key, vs in data.items() if len(vs) > 9}
 
-    key = job.next()
-    i = 0
-    while key:
-        i += 1
-        # print key
-        key = job.next()
-    print i
+    job.scan(shop_prof_dir, ptn, find_job)
+
+    print 'TODO: {}'.format(job.count())
