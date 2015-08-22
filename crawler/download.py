@@ -13,23 +13,6 @@ from log4f import debug_logger
 log = debug_logger('log/download', 'download')
 
 
-class JobPool:
-    def __init__(self, db, job_name, timeout=10):
-        self.db = db
-        self.total_tbl = '{}:total'.format(job_name)
-        self.todo_tbl = '{}:todo'.format(job_name)
-        self.timeout = timeout
-
-    def next(self):
-        key = self.db.blpop(self.todo_tbl, self.timeout)
-        return key and key[1]
-
-    def add(self, key, force=False):
-        is_new = self.db.sadd(self.total_tbl, key)
-        if force or is_new:
-            self.db.rpush(self.todo_tbl, key)
-
-
 def get_title(content):
     """demo validator of builk_single"""
     m = re.compile(r'<title>(.*?)</title>').search(content)
@@ -62,13 +45,12 @@ def builk_single(job, url_ptn, cache_dir, find_new=None):
         key = job.next()
 
 
-def builk_pages(job, url_ptn, cache_dir, find_item, recursive=True,
+def builk_pages(job, url_ptn, cache_dir, find_item, recursive=False,
                 min_num=0, max_page=100, page_start=0):
     filename_ptn = os.path.join(cache_dir, '{}_{}.html')
     key = job.next()
-    print 'downloading pages...'
     while key:
-        log.info('download {}'.format(key))
+        log.info('downloading {}'.format(key))
         try:
             ret = request_pages(key, range(page_start, max_page),
                                 url_ptn, find_item,
@@ -93,21 +75,22 @@ def init_test_path():
 
 
 if __name__ == '__main__':
+    from job import JobPool
 
-    init_test_path()
+    cache_root = 'test_data'
+
     r = redis.StrictRedis()
     r.flushall()
+    j = JobPool(r, cache_root, 'single', pagination=False)
 
-    job = JobPool(r, 'test')
-    job.add('22124523')
-    job.add('5195730')
-
-    path = 'test_data/single'
-    os.makedirs(path)
+    seed = ['22124523', '5195730']
+    job.init_db(seed)
 
     url_pages = 'http://www.dianping.com/shop/{key}/review_more?pageno={page}'
     rev_ptn = re.compile(r'href="/member/(\d+)">(.+?)</a>')
     find_rev = lambda c, key: rev_ptn.findall(c)
+
+    init_test_path()
     builk_pages(job, url_pages, path, find_item=find_rev, recursive=False)
 
     job.add('22124523')

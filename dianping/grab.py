@@ -2,16 +2,15 @@
 import re
 import os
 import redis
-import threading
 
 import sys
 parent = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 sys.path.append(parent)
 
-from argparse import ArgumentParser, FileType
-from crawler.download import RecursiveJob, builk_single, builk_pages
+from argparse import ArgumentParser
+from crawler.download import builk_single, builk_pages
 from crawler.model import install, Peer, HisCount
-from crawler.parser import visited, Indexing
+from crawler.job import JobPool
 
 
 # config
@@ -70,25 +69,25 @@ class ShopReviewCnt(HisCount):
 
 
 def grab_shop_reviews(conn_redis, threshold=10):
-    page_name = 'DianPing Shop Reviews'
+
+    cache_root = 'cache'
+    job_name = 'shop_review'
+    job = JobPool(conn_redis, cache_root, job_name, pagination=True)
+
+    job.scan(shop_prof_dir, rev_ptn)
+    total = {key[:-5] for key, vs in job.data.items() if len(vs) > 9}
+    job.init_db(total)
+
     url = 'http://www.dianping.com/shop/{key}/review_more?pageno={page}'
 
-    idx = Indexing(rev_ptn, shop_review_idx)
-    idx.scan(shop_prof_dir)
-    total = {k[:-5] for k, cnt in idx.data.items() if len(cnt) > threshold-1}
-    done = visited(shop_review_dir, pagination=True)
-    todo = total - done
-
-    conn_redis.sadd('dp-reviews:visited', *done)
-    conn_redis.sadd('dp-reviews:todo', *todo)
-
-    while todo:
-        print 'grabbing shop reviews. total: {}'.format(len(todo))
-        builk_pages(todo, url, shop_review_dir, find_rev,
-            page_name=page_name, page_start=1)
-        todo = conn_redis.smembers('dp-reviews:todo')
+    print 'grabbing shop reviews... TODO: {}'.format(job.count())
+    key = job.next()
+    while key:
+        builk_pages(job, url, shop_review_dir, find_item=find_rev,
+                    page_start=1, recursive=False)
+        key = job.next()
     else:
-        print 'no shop id found'
+        print 'no more jobs'
 
 
 if __name__ == '__main__':
@@ -99,7 +98,8 @@ if __name__ == '__main__':
     r = redis.StrictRedis()
     r.flushall()
 
-    args_parser = ArgumentParser(description='Data Bang-Distributed Vertical Crawler')
+    args_parser = ArgumentParser(
+        description='Data Bang-Distributed Vertical Crawler')
     args_parser.add_argument('page', type=str,
                              help='page type',
                              choices=['profile', 'reviews'])

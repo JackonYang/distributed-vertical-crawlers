@@ -45,6 +45,9 @@ class JobPool:
         todo = set(total) - self._done()
         self.db.rpush(self.todo_tbl, *todo)
 
+    def count(self):
+        return self.db.llen(self.todo_tbl)
+
     def next(self):
         key = self.db.blpop(self.todo_tbl, self.timeout)
         return key and key[1]
@@ -97,6 +100,6 @@ if __name__ == '__main__':
     i = 0
     while key:
         i += 1
-        print key
+        # print key
         key = job.next()
     print i
