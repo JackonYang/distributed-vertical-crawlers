@@ -23,7 +23,9 @@ class JobPool:
         self.total_tbl = '{}:total'.format(job_name)
         self.todo_tbl = '{}:todo'.format(job_name)
 
-        self.db.sadd(self.total_tbl, *self._done())
+        done = self._done()
+        if done:
+            self.db.sadd(self.total_tbl, *done)
 
     def scan(self, path, ptn, find_job, save_period=2000):
         total = set(os.listdir(path))
@@ -39,6 +41,7 @@ class JobPool:
                 print 'saving. {} done.'.format(i+1)
                 self._save(find_job)
 
+        print 'saving. {} done.'.format(i+1)
         self._save(find_job)
 
     def count(self):
