@@ -53,12 +53,12 @@ class JobPool:
         return key and key[1]
 
     def add(self, *keys):
-        count = 0
-        for key in keys:
-            if self.db.sadd(self.total_tbl, key):
-                self.db.rpush(self.todo_tbl, key)
-                count += 1
-        return count
+        _total = self.db.smembers(self.total_tbl)
+        _todo = set(keys) - set(_total)
+        if _todo:
+            self.db.sadd(self.total_tbl, *_todo)
+            self.db.rpush(self.todo_tbl, *_todo)
+        return len(_todo)
 
     def add_force(self, *keys):
         self.db.rpush(self.todo_tbl, *key)
@@ -84,7 +84,8 @@ class JobPool:
 if __name__ == '__main__':
 
     import redis
-    r = redis.StrictRedis()
+    r = redis.StrictRedis(db=1)
+    r.flushdb()
     cache_root = '../dianping/cache'
     job_name = 'shop_review'
     job = JobPool(r, cache_root, job_name, pagination=True)
