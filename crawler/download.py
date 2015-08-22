@@ -41,7 +41,7 @@ def builk_single(job, url_ptn, cache_dir, find_new=None):
                     job.add(item)
         except Exception as e:
             log.error('{}. ID={}'.format(e, key))
-            job.add(key, force=True)
+            job.add_force(key)
         key = job.next()
 
 
@@ -52,6 +52,7 @@ def builk_pages(job, url_ptn, cache_dir, find_item, recursive=False,
     while key:
         log.info('downloading {}'.format(key))
         try:
+            """
             ret = request_pages(key, range(page_start, max_page),
                                 url_ptn, find_item,
                                 min_num=min_num,
@@ -60,9 +61,10 @@ def builk_pages(job, url_ptn, cache_dir, find_item, recursive=False,
             if recursive:
                 for item in ret:
                     job.add(item)
+                    """
         except Exception as e:
             log.error('{}. ID={}'.format(e, key))
-            job.add(key, force=True)
+            job.add_force(key)
         key = job.next()
 
 
